@@ -882,6 +882,13 @@
             <option value="corten">Кортен (российский аналог Ст606)</option>
           </select>
         </div>
+        <div class="field-wrap">
+          <div class="field-label-row">
+            <label>Толщина (мм)</label>
+            <span class="tip" data-tip="Укажите толщину листа или профиля. Используется для расчёта площади покрытия и справки">?</span>
+          </div>
+          <input type="number" id="m_thick" value="4" min="0.5" max="100" step="0.5" oninput="calcMK()">
+        </div>
         <div class="field-row">
           <div>
             <label>Удельный вес (г/см³)</label>
@@ -1059,6 +1066,10 @@
       <div class="result-body">
         <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">На 1 кг готового изделия</div>
 
+        <div class="result-row">
+          <span class="result-label">Толщина материала</span>
+          <span class="result-value" id="r-m-thick">4 мм</span>
+        </div>
         <div class="result-row">
           <span class="result-label">Потребность в материале</span>
           <span class="result-value" id="r-m-mat-need">1.10 кг</span>
@@ -1450,6 +1461,8 @@ function calcMK() {
   const finalPrice = total * (1 + markup/100);
 
   // --- ВЫВОД ---
+  const mThick = parseFloat(document.getElementById('m_thick').value) || 0;
+  document.getElementById('r-m-thick').textContent     = mThick > 0 ? mThick + ' мм' : '—';
   document.getElementById('r-m-mat-need').textContent  = matNeed.toFixed(3) + ' кг';
   document.getElementById('r-m-mat-cost').textContent  = fmtR(matCost);
   document.getElementById('r-m-cover-cost').textContent= cover === 'none' ? '—' : fmtR(coverCost);
