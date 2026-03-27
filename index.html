@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор металлических изделий | Эверест-Тех</title>
+<style>
+  :root {
+    --blue: #1a2744;
+    --blue-mid: #243460;
+    --blue-light: #2e4080;
+    --orange: #e07b00;
+    --orange-light: #f59000;
+    --bg: #f0f2f7;
+    --card: #ffffff;
+    --border: #d0d8e8;
+    --text: #1a2744;
+    --text-light: #5a6a8a;
+    --green: #1e7e4e;
+    --green-bg: #eaf7f0;
+    --red: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--blue);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+  }
+  .logo-block {
+    display: flex;
+    flex-direction: column;
+  }
+  .logo-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.3px;
+  }
+  .logo-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+  .logo-accent {
+    color: var(--orange-light);
+  }
+  .header-badge {
+    margin-left: auto;
+    background: var(--orange);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* TABS */
+  .tabs-bar {
+    background: var(--blue-mid);
+    display: flex;
+    gap: 0;
+    padding: 0 24px;
+  }
+  .tab-btn {
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .tab-btn:hover { color: rgba(255,255,255,0.85); }
+  .tab-btn.active {
+    color: #fff;
+    border-bottom-color: var(--orange-light);
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 860px) {
+    .main { grid-template-columns: 1fr; }
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(26,39,68,0.08);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    background: var(--blue);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header .step-num {
+    background: var(--orange);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-header h3 {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .card-body { padding: 18px 20px; }
+
+  /* FORM ELEMENTS */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text);
+    background: #fafbff;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--blue-light);
+    background: #fff;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field-wrap { margin-bottom: 12px; }
+
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+  .field-label-row label { margin-bottom: 0; }
+
+  /* RADIO GROUP */
+  .radio-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .radio-card {
+    flex: 1;
+    min-width: 100px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .radio-card:hover { border-color: var(--blue-light); }
+  .radio-card.active {
+    border-color: var(--blue);
+    background: #eef1fa;
+  }
+  .radio-card input[type="radio"] { display: none; }
+  .radio-card .radio-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: #fff;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .radio-card.active .radio-dot {
+    border-color: var(--blue);
+    background: var(--blue);
+  }
+  .radio-card.active .radio-dot::after {
+    content: '';
+    width: 6px; height: 6px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .radio-label { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* SELECT COVERAGE */
+  .cover-select-wrap { margin-bottom: 14px; }
+  .cover-options { display: none; }
+  .cover-options.show { display: block; }
+
+  /* SIDES TOGGLE */
+  .sides-toggle {
+    display: flex;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .sides-toggle button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: #fafbff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-light);
+    transition: all 0.15s;
+  }
+  .sides-toggle button.active {
+    background: var(--blue);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* CHECKBOX */
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--blue);
+    cursor: pointer;
+  }
+  .checkbox-row span {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* AUTO VALUE */
+  .auto-val {
+    padding: 9px 12px;
+    background: #eef1fa;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--blue);
+  }
+  .auto-val.editable {
+    background: #fff8ee;
+    border-color: #f0c070;
+    color: #7a4500;
+  }
+
+  /* RESULT PANEL */
+  .result-panel {
+    position: sticky;
+    top: 20px;
+  }
+  .result-card {
+    background: var(--blue);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(26,39,68,0.2);
+  }
+  .result-card-header {
+    background: var(--blue-mid);
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .result-body { padding: 16px 20px; }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    gap: 10px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    flex: 1;
+  }
+  .result-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    text-align: right;
+    min-width: 90px;
+  }
+  .result-value.accent { color: var(--orange-light); }
+  .result-total {
+    background: var(--orange);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .result-total .label {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .result-total .value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .result-markup {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .result-markup label { color: rgba(255,255,255,0.65); }
+  .result-markup input {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.2);
+    color: #fff;
+    margin-top: 6px;
+  }
+  .result-markup input::placeholder { color: rgba(255,255,255,0.4); }
+  .result-final {
+    background: #fff;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .result-final .label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+    text-transform: uppercase;
+  }
+  .result-final .value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--orange);
+  }
+
+  /* TOOLTIP */
+  .tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px; height: 16px;
+    background: var(--border);
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-light);
+    cursor: help;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--blue);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+    padding: 8px 12px;
+    border-radius: 6px;
+    width: 240px;
+    white-space: normal;
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .tip:hover::after { opacity: 1; }
+
+  /* SECTION DIVIDER */
+  .section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+  .info-box {
+    background: #eef5ff;
+    border-left: 3px solid var(--blue-light);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+  .warn-box {
+    background: #fff8ee;
+    border-left: 3px solid var(--orange);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #7a4500;
+    margin-bottom: 12px;
+  }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+
+  /* PERF TABLE */
+  .perf-result {
+    background: #eef1fa;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <div class="logo-title">⚙️ Калькулятор металлических изделий &nbsp;<span class="logo-accent">Эверест-Тех</span></div>
+    <div class="logo-sub">Разработчик: Ковалев Михаил Александрович</div>
+  </div>
+  <div class="header-badge">v1.0</div>
+</header>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('cassette')">🔲 Кассеты</button>
+  <button class="tab-btn" onclick="switchTab('mk')">🔩 Металлоконструкции</button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB: КАССЕТЫ
+════════════════════════════════════════════ -->
+<div id="tab-cassette">
+<div class="main">
+  <div class="left-col">
+
+    <!-- ШАГ 1: Единица измерения -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">1</div><h3>Единица измерения</h3></div>
+      <div class="card-body">
+        <div class="radio-group">
+          <label class="radio-card active" onclick="setCUnit('develop')">
+            <input type="radio" name="c_unit" value="develop" checked>
+            <div class="radio-dot"></div>
+            <div>
+              <div class="radio-label">Развёртка</div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:2px">Полная площадь</div>
+            </div>
+            <span class="tip" data-tip="Развёртка — развернутая на плоскости поверхность детали с учётом видимых лицевых частей и всех отбортовок">?</span>
+          </label>
+          <label class="radio-card" onclick="setCUnit('visible')">
+            <input type="radio" name="c_unit" value="visible">
+            <div class="radio-dot"></div>
+            <div>
+              <div class="radio-label">Видимая</div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:2px">Без отбортовок</div>
+            </div>
+            <span class="tip" data-tip="Видимая — развернутая на плоскости видимая часть поверхности детали без учёта отбортовок">?</span>
+          </label>
+          <label class="radio-card" onclick="setCUnit('projection')">
+            <input type="radio" name="c_unit" value="projection">
+            <div class="radio-dot"></div>
+            <div>
+              <div class="radio-label">Проекция</div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:2px">По фасаду</div>
+            </div>
+            <span class="tip" data-tip="Проекция — ортогональное проецирование видимой поверхности детали на плоскость фасада">?</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 2: Коэффициенты -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">2</div><h3>Коэффициенты</h3></div>
+      <div class="card-body">
+        <div id="c-coef-transform-wrap" class="field-wrap hidden">
+          <div class="field-label-row">
+            <label>Коэффициент трансформации</label>
+            <span class="tip" data-tip="Отношение площади развёртки к площади продаваемой единицы. Например, 1.5 — на 1 м² изделия нужно 1.5 м² развёртки материала">?</span>
+          </div>
+          <input type="number" id="c_coef_transform" value="1.5" min="1" step="0.01" oninput="calcCassette()">
+        </div>
+        <div class="field-wrap">
+          <div class="field-label-row">
+            <label>Отходная часть (%)</label>
+            <span class="tip" data-tip="Процент дополнительного материала на раскладку и отходы листа. Например, 10% — к площади развёртки добавляется 10% на отход">?</span>
+          </div>
+          <input type="number" id="c_waste" value="10" min="0" max="99" step="0.1" oninput="calcCassette()">
+        </div>
+        <div class="info-box" id="c-coef-info">
+          На 1 м² (развёртка): материала = 1 м² + <span id="c-info-waste">10</span>% отходов = <strong><span id="c-info-total-mat">1.10</span> м²</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 3: Материал -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">3</div><h3>Материал</h3></div>
+      <div class="card-body">
+        <div class="field-wrap">
+          <label>Вид материала</label>
+          <select id="c_material" onchange="onCMaterialChange()">
+            <option value="al">Алюминий</option>
+            <option value="al_srb">Алюминий сербский (окрашенный, Coil Coating)</option>
+            <option value="zinc">Оцинковка</option>
+            <option value="st3">Чёрный металл Ст3</option>
+            <option value="n304s">Нержавейка 304 шлифованная</option>
+            <option value="n304z">Нержавейка 304 зеркальная</option>
+            <option value="n430s">Нержавейка 430 шлифованная</option>
+            <option value="n430z">Нержавейка 430 зеркальная</option>
+            <option value="n_rip">Нержавейка декоративная (рябь на воде)</option>
+            <option value="copper">Медь</option>
+            <option value="brass">Латунь</option>
+            <option value="corten">Кортен (российский аналог Ст606)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Толщина (мм)</label>
+            <input type="number" id="c_thick" value="2" min="0.3" max="20" step="0.1" oninput="calcCassette()">
+          </div>
+          <div>
+            <label>Удельный вес (г/см³)</label>
+            <div class="auto-val" id="c_density">2.70</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Вес 1 м² (кг/м²)</label>
+            <div class="auto-val" id="c_weight_m2">5.40</div>
+          </div>
+          <div>
+            <div class="field-label-row">
+              <label>Цена за кг (руб)</label>
+              <span class="tip" data-tip="Цена автоматически подставляется по типу материала. Можно изменить вручную">✎</span>
+            </div>
+            <input type="number" id="c_price_kg" value="320" min="0" step="1" oninput="calcCassette()">
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label>Расчётная стоимость за 1 м² листа (руб)</label>
+          <div class="auto-val accent" id="c_price_m2" style="background:#eaf7f0;border-color:#a0d8b8;color:var(--green)">1 728.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 4: Покрытие -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">4</div><h3>Покрытие</h3></div>
+      <div class="card-body">
+        <div class="cover-select-wrap">
+          <label>Вид покрытия</label>
+          <select id="c_cover" onchange="onCCoverChange()">
+            <option value="none">Без покрытия</option>
+            <option value="powder">Порошковая покраска</option>
+            <option value="pvdf">PVDF покрытие</option>
+            <option value="pe">Полиэстер (ПЭ)</option>
+            <option value="anod">Анодирование</option>
+            <option value="nitrid">Нитрид титана</option>
+            <option value="oxide">Оксидация</option>
+          </select>
+        </div>
+
+        <!-- Порошковая -->
+        <div id="c-cov-powder" class="cover-options">
+          <div class="info-box">Расчёт по площади <strong>развёртки</strong> изделия, без учёта отходной части. 200 г краски на 1 м².</div>
+          <label style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:600;margin-bottom:6px;display:block">Количество сторон</label>
+          <div class="sides-toggle">
+            <button class="active" onclick="setCPowderSides(1,this)">Одна сторона</button>
+            <button onclick="setCPowderSides(2,this)">Две стороны</button>
+          </div>
+          <div class="field-wrap">
+            <label>Цвет покраски</label>
+            <input type="text" id="c_powder_color" placeholder="Напр.: RAL 7016 антрацит" oninput="calcCassette()">
+          </div>
+          <div class="field-row">
+            <div>
+              <label>Цена краски (руб/кг)</label>
+              <input type="number" id="c_powder_price_kg" value="600" min="0" oninput="calcCassette()">
+            </div>
+            <div>
+              <label>Работы по покраске (руб/м²)</label>
+              <input type="number" id="c_powder_work" value="420" min="0" oninput="calcCassette()">
+            </div>
+          </div>
+        </div>
+
+        <!-- PVDF -->
+        <div id="c-cov-pvdf" class="cover-options">
+          <div class="info-box">Расчёт по площади листа <strong>включая отходную часть</strong>.</div>
+          <label style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:600;margin-bottom:6px;display:block">Количество сторон</label>
+          <div class="sides-toggle">
+            <button class="active" onclick="setCPvdfSides(1,this)">Одна сторона</button>
+            <button onclick="setCPvdfSides(2,this)">Две стороны</button>
+          </div>
+          <div class="field-wrap">
+            <label>Стоимость (краска + работа, руб/м²)</label>
+            <input type="number" id="c_pvdf_price" value="900" min="0" oninput="calcCassette()">
+          </div>
+        </div>
+
+        <!-- ПЭ -->
+        <div id="c-cov-pe" class="cover-options">
+          <div class="info-box">Расчёт по площади листа <strong>включая отходную часть</strong>.</div>
+          <label style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:600;margin-bottom:6px;display:block">Количество сторон</label>
+          <div class="sides-toggle">
+            <button class="active" onclick="setCPeSides(1,this)">Одна сторона</button>
+            <button onclick="setCPeSides(2,this)">Две стороны</button>
+          </div>
+          <div class="field-wrap">
+            <label>Стоимость (краска + работа, руб/м²)</label>
+            <input type="number" id="c_pe_price" value="600" min="0" oninput="calcCassette()">
+          </div>
+        </div>
+
+        <!-- Анодирование -->
+        <div id="c-cov-anod" class="cover-options">
+          <div class="info-box">Только одна сторона. Расчёт по площади листа <strong>включая отходную часть</strong>.</div>
+          <div class="field-wrap">
+            <label>Стоимость услуги (руб/м²)</label>
+            <input type="number" id="c_anod_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcCassette()">
+          </div>
+        </div>
+
+        <!-- Нитрид Титана -->
+        <div id="c-cov-nitrid" class="cover-options">
+          <div class="info-box">Только на нержавейку. Одна сторона. Расчёт по площади листа <strong>включая отходную часть</strong>.</div>
+          <div class="field-wrap">
+            <label>Стоимость услуги (руб/м²)</label>
+            <input type="number" id="c_nitrid_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcCassette()">
+          </div>
+        </div>
+
+        <!-- Оксидация -->
+        <div id="c-cov-oxide" class="cover-options">
+          <div class="info-box">Наносится на медь, латунь, кортен. Одна сторона. Расчёт по <strong>развёртке</strong> без отходной части.</div>
+          <div class="field-wrap">
+            <label>Стоимость услуги (руб/м²)</label>
+            <input type="number" id="c_oxide_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcCassette()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 5: Работы -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">5</div><h3>Стоимость работ</h3></div>
+      <div class="card-body">
+        <div class="field-row">
+          <div>
+            <label>Мех. обработка (руб/м² развёртки)</label>
+            <input type="number" id="c_work_mech" value="1500" min="0" oninput="calcCassette()">
+          </div>
+          <div>
+            <label>Вальцовка кассет (руб/м² развёртки)</label>
+            <input type="number" id="c_work_roll" value="1200" min="0" oninput="calcCassette()">
+          </div>
+        </div>
+
+        <div class="field-wrap">
+          <label>Сборка рёбер усиления (руб/м² развёртки, 0 = не учитывать)</label>
+          <input type="number" id="c_work_rib" value="0" min="0" oninput="calcCassette()">
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field-wrap">
+          <label>Перфорация — цена за 1 отверстие (руб, 0 = не учитывать)</label>
+          <input type="number" id="c_perf_price" value="0" min="0" step="0.01" oninput="calcCassette()">
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Шаг перфорации по X (мм)</label>
+            <input type="number" id="c_perf_x" value="20" min="1" max="500" oninput="calcCPerf(); calcCassette()">
+          </div>
+          <div>
+            <label>Шаг перфорации по Y (мм)</label>
+            <input type="number" id="c_perf_y" value="20" min="1" max="500" oninput="calcCPerf(); calcCassette()">
+          </div>
+        </div>
+        <div class="perf-result" id="c-perf-result">Отверстий на 1 м²: <strong>2500 шт</strong></div>
+
+        <div class="section-divider"></div>
+
+        <div class="field-row">
+          <div>
+            <label>Упаковка (руб/м² развёртки)</label>
+            <input type="number" id="c_work_pack" value="0" min="0" oninput="calcCassette()">
+          </div>
+          <div>
+            <label>Доставка (руб/м² развёртки)</label>
+            <input type="number" id="c_work_del" value="0" min="0" oninput="calcCassette()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left-col -->
+
+  <!-- RESULT -->
+  <div class="result-panel">
+    <div class="result-card">
+      <div class="result-card-header">📊 Результат расчёта</div>
+      <div class="result-body">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">На 1 м² · <span id="c-unit-label">развёртка</span></div>
+
+        <div class="result-row">
+          <span class="result-label">Площадь материала</span>
+          <span class="result-value" id="r-c-mat-area">1.10 м²</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Вес материала</span>
+          <span class="result-value" id="r-c-mat-weight">5.94 кг</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Стоимость материала</span>
+          <span class="result-value accent" id="r-c-mat-cost">1 901</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Покрытие</span>
+          <span class="result-value" id="r-c-cover-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Мех. обработка</span>
+          <span class="result-value" id="r-c-mech-cost">1 500</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Вальцовка</span>
+          <span class="result-value" id="r-c-roll-cost">1 200</span>
+        </div>
+        <div class="result-row" id="r-c-rib-row">
+          <span class="result-label">Рёбра усиления</span>
+          <span class="result-value" id="r-c-rib-cost">—</span>
+        </div>
+        <div class="result-row" id="r-c-perf-row">
+          <span class="result-label">Перфорация (<span id="r-c-perf-cnt">—</span> отв.)</span>
+          <span class="result-value" id="r-c-perf-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Упаковка</span>
+          <span class="result-value" id="r-c-pack-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Доставка</span>
+          <span class="result-value" id="r-c-del-cost">—</span>
+        </div>
+
+        <div class="result-total">
+          <div class="label">Себестоимость</div>
+          <div class="value" id="r-c-total">4 601 ₽/м²</div>
+        </div>
+
+        <div class="result-markup">
+          <label>Наценка (%)</label>
+          <input type="number" id="c_markup" value="20" min="0" max="500" oninput="calcCassette()" placeholder="0">
+        </div>
+
+        <div class="result-final">
+          <div class="label">Итого с наценкой</div>
+          <div class="value" id="r-c-final">5 521 ₽</div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">за 1 м² · <span id="r-c-unit-bot">развёртка</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main cassette -->
+</div><!-- /tab-cassette -->
+
+
+<!-- ═══════════════════════════════════════════
+     TAB: МЕТАЛЛОКОНСТРУКЦИИ
+════════════════════════════════════════════ -->
+<div id="tab-mk" class="hidden">
+<div class="main">
+  <div class="left-col">
+
+    <!-- ШАГ 1: Параметры -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">1</div><h3>Параметры расчёта</h3></div>
+      <div class="card-body">
+        <div class="info-box">Металлоконструкции рассчитываются на <strong>1 кг готового изделия</strong>.</div>
+        <div class="field-wrap">
+          <div class="field-label-row">
+            <label>Отходная часть (%)</label>
+            <span class="tip" data-tip="Процент дополнительного материала на раскладку, рез, отходы. Добавляется к весу материала.">?</span>
+          </div>
+          <input type="number" id="m_waste" value="10" min="0" max="99" step="0.1" oninput="calcMK()">
+        </div>
+        <div class="info-box" id="m-waste-info">
+          На 1 кг изделия: материала = 1 кг + <span id="m-info-waste">10</span>% отходов = <strong><span id="m-info-total">1.10</span> кг</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 2: Материал -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">2</div><h3>Материал</h3></div>
+      <div class="card-body">
+        <div class="field-wrap">
+          <label>Вид материала</label>
+          <select id="m_material" onchange="onMMaterialChange()">
+            <option value="al">Алюминий</option>
+            <option value="al_srb">Алюминий сербский (окрашенный)</option>
+            <option value="zinc">Оцинковка</option>
+            <option value="st3" selected>Чёрный металл Ст3</option>
+            <option value="n304s">Нержавейка 304 шлифованная</option>
+            <option value="n304z">Нержавейка 304 зеркальная</option>
+            <option value="n430s">Нержавейка 430 шлифованная</option>
+            <option value="n430z">Нержавейка 430 зеркальная</option>
+            <option value="n_rip">Нержавейка декоративная (рябь на воде)</option>
+            <option value="copper">Медь</option>
+            <option value="brass">Латунь</option>
+            <option value="corten">Кортен (российский аналог Ст606)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Удельный вес (г/см³)</label>
+            <div class="auto-val" id="m_density">7.85</div>
+          </div>
+          <div>
+            <div class="field-label-row">
+              <label>Цена за кг (руб)</label>
+              <span class="tip" data-tip="Автоматически подставляется. Можно изменить вручную">✎</span>
+            </div>
+            <input type="number" id="m_price_kg" value="90" min="0" step="1" oninput="calcMK()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 3: Покрытие -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">3</div><h3>Покрытие</h3></div>
+      <div class="card-body">
+        <div class="cover-select-wrap">
+          <label>Вид покрытия</label>
+          <select id="m_cover" onchange="onMCoverChange()">
+            <option value="none">Без покрытия</option>
+            <option value="powder">Порошковая покраска</option>
+            <option value="hotzinc">Горячий цинк</option>
+            <option value="hotzinc_powder">Горячий цинк + Порошковая покраска (2 слоя)</option>
+            <option value="thermodiff">Термодиффузия</option>
+            <option value="galvanic">Гальваника</option>
+          </select>
+        </div>
+
+        <!-- Порошковая для МК -->
+        <div id="m-cov-powder" class="cover-options">
+          <div class="info-box">Расчёт по площади поверхности изделия (без отходной части). 200 г краски на 1 м².</div>
+          <div class="field-wrap">
+            <div class="field-label-row">
+              <label>Площадь поверхности (м²/кг изделия)</label>
+              <span class="tip" data-tip="Для среднего металлопроката: ~0.16 м²/кг. Для тонкостенных изделий — больше, для массивных — меньше">?</span>
+            </div>
+            <input type="number" id="m_powder_area_per_kg" value="0.16" min="0.01" step="0.01" oninput="calcMK()">
+          </div>
+          <label style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:600;margin-bottom:6px;display:block">Стороны</label>
+          <div class="sides-toggle">
+            <button class="active" onclick="setMMPowderSides(1,this)">Одна сторона</button>
+            <button onclick="setMMPowderSides(2,this)">Две стороны</button>
+          </div>
+          <div class="field-wrap">
+            <label>Цвет покраски</label>
+            <input type="text" id="m_powder_color" placeholder="Напр.: RAL 7016" oninput="calcMK()">
+          </div>
+          <div class="field-row">
+            <div>
+              <label>Цена краски (руб/кг)</label>
+              <input type="number" id="m_powder_price_kg" value="600" min="0" oninput="calcMK()">
+            </div>
+            <div>
+              <label>Работы по покраске (руб/м²)</label>
+              <input type="number" id="m_powder_work" value="420" min="0" oninput="calcMK()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Горячий цинк -->
+        <div id="m-cov-hotzinc" class="cover-options">
+          <div class="info-box">Расчёт по весу изделия <strong>без отходной части</strong>. Включает материалы и работы.</div>
+          <div class="field-wrap">
+            <label>Стоимость горячего цинка (руб/кг)</label>
+            <input type="number" id="m_hotzinc_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcMK()">
+          </div>
+        </div>
+
+        <!-- Термодиффузия -->
+        <div id="m-cov-thermodiff" class="cover-options">
+          <div class="info-box">Расчёт по весу изделия <strong>без отходной части</strong>.</div>
+          <div class="field-wrap">
+            <label>Стоимость термодиффузии (руб/кг)</label>
+            <input type="number" id="m_thermodiff_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcMK()">
+          </div>
+        </div>
+
+        <!-- Гальваника -->
+        <div id="m-cov-galvanic" class="cover-options">
+          <div class="info-box">Расчёт по весу изделия <strong>без отходной части</strong>.</div>
+          <div class="field-wrap">
+            <label>Стоимость гальваники (руб/кг)</label>
+            <input type="number" id="m_galvanic_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcMK()">
+          </div>
+        </div>
+
+        <!-- Горячий цинк + Порошковая (двойное) -->
+        <div id="m-cov-hotzinc-powder" class="cover-options">
+          <div class="warn-box">⚡ Двойное покрытие: горячий цинк + порошковая покраска поверх</div>
+          <div class="field-row">
+            <div>
+              <label>Горячий цинк (руб/кг)</label>
+              <input type="number" id="m_hz_pw_zinc_price" value="0" min="0" placeholder="Стоимость" oninput="calcMK()">
+            </div>
+            <div>
+              <label>Площадь поверхности (м²/кг)</label>
+              <input type="number" id="m_hz_pw_area" value="0.16" min="0.01" step="0.01" oninput="calcMK()">
+            </div>
+          </div>
+          <label style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:600;margin-bottom:6px;display:block">Стороны окраски</label>
+          <div class="sides-toggle">
+            <button class="active" onclick="setMHZPSides(1,this)">Одна сторона</button>
+            <button onclick="setMHZPSides(2,this)">Две стороны</button>
+          </div>
+          <div class="field-row">
+            <div>
+              <label>Краска порошок (руб/кг)</label>
+              <input type="number" id="m_hz_pw_paint_kg" value="600" min="0" oninput="calcMK()">
+            </div>
+            <div>
+              <label>Работы покраска (руб/м²)</label>
+              <input type="number" id="m_hz_pw_work" value="420" min="0" oninput="calcMK()">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 4: Работы -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">4</div><h3>Стоимость работ</h3></div>
+      <div class="card-body">
+        <div class="field-wrap">
+          <label>Сварка (руб/кг изделия)</label>
+          <input type="number" id="m_work_weld" value="80" min="0" oninput="calcMK()">
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field-wrap">
+          <label>Перфорация — площадь (м²/кг, 0 = не учитывать)</label>
+          <input type="number" id="m_perf_area_per_kg" value="0" min="0" step="0.01" oninput="calcMK()">
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Шаг перфорации по X (мм)</label>
+            <input type="number" id="m_perf_x" value="20" min="1" oninput="calcMPerf(); calcMK()">
+          </div>
+          <div>
+            <label>Шаг перфорации по Y (мм)</label>
+            <input type="number" id="m_perf_y" value="20" min="1" oninput="calcMPerf(); calcMK()">
+          </div>
+        </div>
+        <div class="perf-result" id="m-perf-result">Отверстий на 1 м²: <strong>2500 шт</strong></div>
+        <div class="field-wrap" style="margin-top:10px">
+          <label>Цена за 1 отверстие (руб)</label>
+          <input type="number" id="m_perf_price" value="0" min="0" step="0.01" oninput="calcMK()">
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field-row">
+          <div>
+            <label>Упаковка (руб/кг)</label>
+            <input type="number" id="m_work_pack" value="0" min="0" oninput="calcMK()">
+          </div>
+          <div>
+            <label>Доставка (руб/кг)</label>
+            <input type="number" id="m_work_del" value="0" min="0" oninput="calcMK()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left-col mk -->
+
+  <!-- RESULT MK -->
+  <div class="result-panel">
+    <div class="result-card">
+      <div class="result-card-header">📊 Результат расчёта</div>
+      <div class="result-body">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">На 1 кг готового изделия</div>
+
+        <div class="result-row">
+          <span class="result-label">Потребность в материале</span>
+          <span class="result-value" id="r-m-mat-need">1.10 кг</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Стоимость материала</span>
+          <span class="result-value accent" id="r-m-mat-cost">99</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Покрытие</span>
+          <span class="result-value" id="r-m-cover-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Сварка</span>
+          <span class="result-value" id="r-m-weld-cost">80</span>
+        </div>
+        <div class="result-row" id="r-m-perf-row">
+          <span class="result-label">Перфорация (<span id="r-m-perf-cnt">—</span> отв/м²)</span>
+          <span class="result-value" id="r-m-perf-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Упаковка</span>
+          <span class="result-value" id="r-m-pack-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Доставка</span>
+          <span class="result-value" id="r-m-del-cost">—</span>
+        </div>
+
+        <div class="result-total">
+          <div class="label">Себестоимость</div>
+          <div class="value" id="r-m-total">179 ₽/кг</div>
+        </div>
+
+        <div class="result-markup">
+          <label>Наценка (%)</label>
+          <input type="number" id="m_markup" value="20" min="0" max="500" oninput="calcMK()" placeholder="0">
+        </div>
+
+        <div class="result-final">
+          <div class="label">Итого с наценкой</div>
+          <div class="value" id="r-m-final">215 ₽</div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">за 1 кг готового изделия</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main mk -->
+</div><!-- /tab-mk -->
+
+<script>
+// ═══════════════════════════════════════════
+// СПРАВОЧНИКИ
+// ═══════════════════════════════════════════
+const MATERIALS = {
+  al:    { density: 2.70, price: 320,  label: 'Алюминий' },
+  al_srb:{ density: 2.70, price: 900,  label: 'Алюминий сербский' },
+  zinc:  { density: 7.85, price: 130,  label: 'Оцинковка' },
+  st3:   { density: 7.85, price: 90,   label: 'Ст3' },
+  n304s: { density: 7.93, price: 600,  label: 'Нерж. 304 шл.' },
+  n304z: { density: 7.93, price: 650,  label: 'Нерж. 304 зерк.' },
+  n430s: { density: 7.75, price: 450,  label: 'Нерж. 430 шл.' },
+  n430z: { density: 7.75, price: 500,  label: 'Нерж. 430 зерк.' },
+  n_rip: { density: 7.85, price: 520,  label: 'Нерж. рябь' },
+  copper:{ density: 8.90, price: 1200, label: 'Медь' },
+  brass: { density: 8.50, price: 1000, label: 'Латунь' },
+  corten:{ density: 7.85, price: 150,  label: 'Кортен' },
+};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let cUnit = 'develop';       // develop | visible | projection
+let cPowderSides = 1;
+let cPvdfSides = 1;
+let cPeSides = 1;
+let mPowderSides = 1;
+let mHZPSides = 1;
+
+// ═══════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-cassette').classList.toggle('hidden', tab !== 'cassette');
+  document.getElementById('tab-mk').classList.toggle('hidden', tab !== 'mk');
+}
+
+// ═══════════════════════════════════════════
+// КАССЕТЫ — ЕДИНИЦА ИЗМЕРЕНИЯ
+// ═══════════════════════════════════════════
+function setCUnit(unit) {
+  cUnit = unit;
+  document.querySelectorAll('#tab-cassette .radio-card').forEach(c => c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  const hasTransform = (unit === 'visible' || unit === 'projection');
+  document.getElementById('c-coef-transform-wrap').classList.toggle('hidden', !hasTransform);
+
+  const labels = { develop: 'развёртка', visible: 'видимая', projection: 'проекция' };
+  document.getElementById('c-unit-label').textContent = labels[unit];
+  document.getElementById('r-c-unit-bot').textContent = labels[unit];
+
+  calcCassette();
+}
+
+// ═══════════════════════════════════════════
+// КАССЕТЫ — МАТЕРИАЛ
+// ═══════════════════════════════════════════
+function onCMaterialChange() {
+  const mat = MATERIALS[document.getElementById('c_material').value];
+  document.getElementById('c_density').textContent = mat.density.toFixed(2);
+  document.getElementById('c_price_kg').value = mat.price;
+  calcCassette();
+}
+
+// ═══════════════════════════════════════════
+// КАССЕТЫ — ПОКРЫТИЕ
+// ═══════════════════════════════════════════
+function onCCoverChange() {
+  const val = document.getElementById('c_cover').value;
+  const ids = ['powder','pvdf','pe','anod','nitrid','oxide'];
+  ids.forEach(id => {
+    const el = document.getElementById('c-cov-' + id);
+    if (el) el.classList.toggle('show', val === id);
+  });
+  calcCassette();
+}
+
+function setCPowderSides(n, btn) {
+  cPowderSides = n;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcCassette();
+}
+function setCPvdfSides(n, btn) {
+  cPvdfSides = n;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcCassette();
+}
+function setCPeSides(n, btn) {
+  cPeSides = n;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcCassette();
+}
+
+// ═══════════════════════════════════════════
+// КАССЕТЫ — ОПЦИИ РАБОТ
+// ═══════════════════════════════════════════
+// toggleCRib и toggleCPerf удалены — поля всегда видны, 0 = не учитывать
+
+function calcCPerf() {
+  const x = parseFloat(document.getElementById('c_perf_x').value) || 1;
+  const y = parseFloat(document.getElementById('c_perf_y').value) || 1;
+  const count = Math.floor(1000/x) * Math.floor(1000/y);
+  document.getElementById('c-perf-result').innerHTML = `Отверстий на 1 м²: <strong>${fmt(count)} шт</strong>`;
+  document.getElementById('r-c-perf-cnt').textContent = fmt(count);
+  return count;
+}
+
+// ═══════════════════════════════════════════
+// КАССЕТЫ — ГЛАВНЫЙ РАСЧЁТ
+// ═══════════════════════════════════════════
+function calcCassette() {
+  const mat    = MATERIALS[document.getElementById('c_material').value];
+  const thick  = parseFloat(document.getElementById('c_thick').value) || 0;
+  const priceKg= parseFloat(document.getElementById('c_price_kg').value) || 0;
+  const waste  = parseFloat(document.getElementById('c_waste').value) || 0;
+  const coefTr = (cUnit === 'develop') ? 1 : (parseFloat(document.getElementById('c_coef_transform').value) || 1);
+
+  // Вес 1 м² листа: плотность (г/см³) × толщина (мм) = кг/м²
+  // Пример: Al 2.70 г/см³ × 2 мм = 5.40 кг/м²
+  const weightM2 = mat.density * thick;
+  document.getElementById('c_density').textContent = mat.density.toFixed(2);
+  document.getElementById('c_weight_m2').textContent = weightM2.toFixed(3) + ' кг/м²';
+  const priceM2 = weightM2 * priceKg;
+  document.getElementById('c_price_m2').textContent = fmtR(priceM2);
+
+  // Коэф. инфо
+  document.getElementById('c-info-waste').textContent = waste;
+  const wasteK = 1 + waste/100;
+  const matArea = coefTr * wasteK; // м² материала на 1 м² изделия
+  document.getElementById('c-info-total-mat').textContent = matArea.toFixed(3);
+
+  // Площадь развёртки (без отходов)
+  const developArea = coefTr; // м² развёртки на 1 м² изделия (без отходной части)
+
+  // Стоимость материала
+  const matCost = matArea * priceM2;
+
+  // --- ПОКРЫТИЕ ---
+  let coverCost = 0;
+  const cover = document.getElementById('c_cover').value;
+
+  if (cover === 'powder') {
+    // По развёртке, БЕЗ отходов
+    const paintKg = parseFloat(document.getElementById('c_powder_price_kg').value) || 0;
+    const workM2  = parseFloat(document.getElementById('c_powder_work').value) || 0;
+    // 200 г/м² = 0.2 кг/м²
+    const paintCost = developArea * 0.2 * paintKg;
+    const workCost  = developArea * workM2;
+    coverCost = (paintCost + workCost) * cPowderSides;
+  } else if (cover === 'pvdf') {
+    const pM2 = parseFloat(document.getElementById('c_pvdf_price').value) || 0;
+    // По площади листа включая отходы
+    coverCost = coefTr * wasteK * pM2 * cPvdfSides;
+  } else if (cover === 'pe') {
+    const pM2 = parseFloat(document.getElementById('c_pe_price').value) || 0;
+    coverCost = coefTr * wasteK * pM2 * cPeSides;
+  } else if (cover === 'anod') {
+    const pM2 = parseFloat(document.getElementById('c_anod_price').value) || 0;
+    coverCost = coefTr * wasteK * pM2;
+  } else if (cover === 'nitrid') {
+    const pM2 = parseFloat(document.getElementById('c_nitrid_price').value) || 0;
+    coverCost = coefTr * wasteK * pM2;
+  } else if (cover === 'oxide') {
+    const pM2 = parseFloat(document.getElementById('c_oxide_price').value) || 0;
+    coverCost = developArea * pM2;
+  }
+
+  // --- РАБОТЫ ---
+  const mechCost = (parseFloat(document.getElementById('c_work_mech').value) || 0) * developArea;
+  const rollCost = (parseFloat(document.getElementById('c_work_roll').value) || 0) * developArea;
+
+  const ribCost = (parseFloat(document.getElementById('c_work_rib').value) || 0) * developArea;
+
+  let perfCost = 0;
+  let perfCount = 0;
+  const perfPriceEach = parseFloat(document.getElementById('c_perf_price').value) || 0;
+  if (perfPriceEach > 0) {
+    perfCount = calcCPerf();
+    perfCost = perfCount * perfPriceEach;
+  }
+
+  const packCost = (parseFloat(document.getElementById('c_work_pack').value) || 0) * developArea;
+  const delCost  = (parseFloat(document.getElementById('c_work_del').value) || 0) * developArea;
+
+  const total = matCost + coverCost + mechCost + rollCost + ribCost + perfCost + packCost + delCost;
+  const markup = parseFloat(document.getElementById('c_markup').value) || 0;
+  const finalPrice = total * (1 + markup/100);
+
+  // --- ВЫВОД ---
+  document.getElementById('r-c-mat-area').textContent   = matArea.toFixed(3) + ' м²';
+  document.getElementById('r-c-mat-weight').textContent = (matArea * weightM2).toFixed(3) + ' кг';
+  document.getElementById('r-c-mat-cost').textContent   = fmtR(matCost);
+  document.getElementById('r-c-cover-cost').textContent = cover === 'none' ? '—' : fmtR(coverCost);
+  document.getElementById('r-c-mech-cost').textContent  = fmtR(mechCost);
+  document.getElementById('r-c-roll-cost').textContent  = fmtR(rollCost);
+  document.getElementById('r-c-rib-cost').textContent   = ribCost > 0 ? fmtR(ribCost) : '—';
+  document.getElementById('r-c-perf-cost').textContent  = perfCost > 0 ? fmtR(perfCost) : '—';
+  document.getElementById('r-c-perf-cnt').textContent   = perfCount > 0 ? fmt(perfCount) : '—';
+  document.getElementById('r-c-pack-cost').textContent  = packCost > 0 ? fmtR(packCost) : '—';
+  document.getElementById('r-c-del-cost').textContent   = delCost > 0 ? fmtR(delCost) : '—';
+  document.getElementById('r-c-total').textContent      = fmtR(total) + ' ₽/м²';
+  document.getElementById('r-c-final').textContent      = fmtR(finalPrice) + ' ₽';
+}
+
+// ═══════════════════════════════════════════
+// МК — МАТЕРИАЛ
+// ═══════════════════════════════════════════
+function onMMaterialChange() {
+  const mat = MATERIALS[document.getElementById('m_material').value];
+  document.getElementById('m_density').textContent = mat.density.toFixed(2);
+  document.getElementById('m_price_kg').value = mat.price;
+  calcMK();
+}
+
+// ═══════════════════════════════════════════
+// МК — ПОКРЫТИЕ
+// ═══════════════════════════════════════════
+function onMCoverChange() {
+  const val = document.getElementById('m_cover').value;
+  const ids = ['powder','hotzinc','thermodiff','galvanic','hotzinc-powder'];
+  ids.forEach(id => {
+    const el = document.getElementById('m-cov-' + id);
+    if (el) el.classList.toggle('show', val === id.replace('-','_') || val === id);
+  });
+  // normalize
+  ['powder','hotzinc','thermodiff','galvanic'].forEach(id => {
+    const el = document.getElementById('m-cov-' + id);
+    if (el) el.classList.toggle('show', val === id);
+  });
+  const hzp = document.getElementById('m-cov-hotzinc-powder');
+  if (hzp) hzp.classList.toggle('show', val === 'hotzinc_powder');
+  calcMK();
+}
+
+function setMMPowderSides(n, btn) {
+  mPowderSides = n;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcMK();
+}
+function setMHZPSides(n, btn) {
+  mHZPSides = n;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcMK();
+}
+
+// ═══════════════════════════════════════════
+// МК — ОПЦИИ РАБОТ
+// ═══════════════════════════════════════════
+function toggleMPerf() {
+  const cb = { checked: false }; // deprecated
+  cb.checked = !cb.checked;
+  document.getElementById('m-perf-wrap').classList.toggle('hidden', !cb.checked);
+  document.getElementById('r-m-perf-row').style.display = cb.checked ? 'flex' : 'none';
+  calcMPerf();
+  calcMK();
+}
+
+function calcMPerf() {
+  const x = parseFloat(document.getElementById('m_perf_x').value) || 1;
+  const y = parseFloat(document.getElementById('m_perf_y').value) || 1;
+  const count = Math.floor(1000/x) * Math.floor(1000/y);
+  document.getElementById('m-perf-result').innerHTML = `Отверстий на 1 м²: <strong>${fmt(count)} шт</strong>`;
+  document.getElementById('r-m-perf-cnt').textContent = fmt(count);
+  return count;
+}
+
+// ═══════════════════════════════════════════
+// МК — ГЛАВНЫЙ РАСЧЁТ
+// ═══════════════════════════════════════════
+function calcMK() {
+  const mat    = MATERIALS[document.getElementById('m_material').value];
+  const priceKg= parseFloat(document.getElementById('m_price_kg').value) || 0;
+  const waste  = parseFloat(document.getElementById('m_waste').value) || 0;
+  const wasteK = 1 + waste/100;
+
+  // Инфо
+  document.getElementById('m-info-waste').textContent = waste;
+  document.getElementById('m-info-total').textContent = wasteK.toFixed(3);
+  document.getElementById('m_density').textContent = mat.density.toFixed(2);
+
+  // Потребность материала на 1 кг изделия
+  const matNeed = wasteK; // кг
+  const matCost = matNeed * priceKg;
+
+  // --- ПОКРЫТИЕ ---
+  let coverCost = 0;
+  const cover = document.getElementById('m_cover').value;
+
+  if (cover === 'powder') {
+    const areaPerKg = parseFloat(document.getElementById('m_powder_area_per_kg').value) || 0;
+    const paintKg   = parseFloat(document.getElementById('m_powder_price_kg').value) || 0;
+    const workM2    = parseFloat(document.getElementById('m_powder_work').value) || 0;
+    const paintCost = areaPerKg * 0.2 * paintKg;
+    const workCost  = areaPerKg * workM2;
+    coverCost = (paintCost + workCost) * mPowderSides;
+  } else if (cover === 'hotzinc') {
+    coverCost = parseFloat(document.getElementById('m_hotzinc_price').value) || 0;
+  } else if (cover === 'thermodiff') {
+    coverCost = parseFloat(document.getElementById('m_thermodiff_price').value) || 0;
+  } else if (cover === 'galvanic') {
+    coverCost = parseFloat(document.getElementById('m_galvanic_price').value) || 0;
+  } else if (cover === 'hotzinc_powder') {
+    const zincPrice = parseFloat(document.getElementById('m_hz_pw_zinc_price').value) || 0;
+    const area      = parseFloat(document.getElementById('m_hz_pw_area').value) || 0;
+    const paintKg   = parseFloat(document.getElementById('m_hz_pw_paint_kg').value) || 0;
+    const workM2    = parseFloat(document.getElementById('m_hz_pw_work').value) || 0;
+    const zincCost  = zincPrice;
+    const paintCost = area * 0.2 * paintKg;
+    const workCost  = area * workM2;
+    coverCost = zincCost + (paintCost + workCost) * mHZPSides;
+  }
+
+  // --- РАБОТЫ ---
+  const weldCost = parseFloat(document.getElementById('m_work_weld').value) || 0;
+
+  let perfCost = 0;
+  let perfCount = 0;
+  const mPerfArea = parseFloat(document.getElementById('m_perf_area_per_kg').value) || 0;
+  const mPerfPriceE = parseFloat(document.getElementById('m_perf_price').value) || 0;
+  if (mPerfArea > 0 && mPerfPriceE > 0) {
+    perfCount = calcMPerf();
+    perfCost = perfCount * mPerfArea * mPerfPriceE;
+  }
+
+  const packCost = parseFloat(document.getElementById('m_work_pack').value) || 0;
+  const delCost  = parseFloat(document.getElementById('m_work_del').value) || 0;
+
+  const total = matCost + coverCost + weldCost + perfCost + packCost + delCost;
+  const markup = parseFloat(document.getElementById('m_markup').value) || 0;
+  const finalPrice = total * (1 + markup/100);
+
+  // --- ВЫВОД ---
+  document.getElementById('r-m-mat-need').textContent  = matNeed.toFixed(3) + ' кг';
+  document.getElementById('r-m-mat-cost').textContent  = fmtR(matCost);
+  document.getElementById('r-m-cover-cost').textContent= cover === 'none' ? '—' : fmtR(coverCost);
+  document.getElementById('r-m-weld-cost').textContent = fmtR(weldCost);
+  document.getElementById('r-m-perf-cost').textContent = perfCost > 0 ? fmtR(perfCost) : '—';
+  document.getElementById('r-m-perf-cnt').textContent  = perfCount > 0 ? fmt(perfCount) : '—';
+  document.getElementById('r-m-pack-cost').textContent = packCost > 0 ? fmtR(packCost) : '—';
+  document.getElementById('r-m-del-cost').textContent  = delCost > 0 ? fmtR(delCost) : '—';
+  document.getElementById('r-m-total').textContent     = fmtR(total) + ' ₽/кг';
+  document.getElementById('r-m-final').textContent     = fmtR(finalPrice) + ' ₽';
+}
+
+// ═══════════════════════════════════════════
+// УТИЛИТЫ
+// ═══════════════════════════════════════════
+function fmt(n) {
+  return Math.round(n).toLocaleString('ru-RU');
+}
+function fmtR(n) {
+  return Math.round(n).toLocaleString('ru-RU') + ' ₽';
+}
+
+// ═══════════════════════════════════════════
+// ИНИЦИАЛИЗАЦИЯ
+// ═══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  onCMaterialChange();
+  onMMaterialChange();
+  calcCassette();
+  calcMK();
+});
+</script>
+</body>
+</html>
