@@ -339,6 +339,56 @@
     min-width: 90px;
   }
   .result-value.accent { color: var(--orange-light); }
+  /* Блоки материалы / работы */
+  .result-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 5px 0 3px;
+    margin-top: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .result-section-title.mat  { color: #F4A261; }
+  .result-section-title.work { color: #56CFE1; }
+  .result-section-subtotal {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 2px;
+    margin-bottom: 2px;
+  }
+  .result-section-subtotal.mat  { color: #F4A261; }
+  .result-section-subtotal.work { color: #56CFE1; }
+  /* Полоса соотношения */
+  .ratio-bar-wrap { margin: 10px 0 4px; }
+  .ratio-bar {
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    background: rgba(255,255,255,0.1);
+  }
+  .ratio-bar-mat  { background: #F4A261; transition: width 0.3s; }
+  .ratio-bar-work { background: #56CFE1; transition: width 0.3s; }
+  .ratio-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-top: 3px;
+    color: rgba(255,255,255,0.7);
+  }
+  /* Доп. стоимость за развёртку (мелко) */
+  .result-develop-hint {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+    text-align: center;
+    margin-top: 4px;
+  }
   .result-total {
     background: var(--orange);
     border-radius: 8px;
@@ -772,37 +822,22 @@
       <div class="result-body">
         <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">На 1 м² · <span id="c-unit-label">развёртка</span></div>
 
-        <div class="result-row">
-          <span class="result-label">Площадь материала</span>
-          <span class="result-value" id="r-c-mat-area">1.10 м²</span>
+        <!-- БЛОК: МАТЕРИАЛЫ -->
+        <div class="result-section-title mat">
+          <span>📦 Материалы и подряд</span>
+          <span id="r-c-mat-pct">—%</span>
         </div>
         <div class="result-row">
-          <span class="result-label">Вес материала</span>
-          <span class="result-value" id="r-c-mat-weight">5.94 кг</span>
+          <span class="result-label">Площадь / вес</span>
+          <span class="result-value"><span id="r-c-mat-area">1.10 м²</span> · <span id="r-c-mat-weight">5.94 кг</span></span>
         </div>
         <div class="result-row">
-          <span class="result-label">Стоимость материала</span>
-          <span class="result-value accent" id="r-c-mat-cost">1 901</span>
+          <span class="result-label">Металл</span>
+          <span class="result-value accent" id="r-c-mat-cost">1 901 ₽</span>
         </div>
-        <div class="result-row">
-          <span class="result-label">Покрытие</span>
-          <span class="result-value" id="r-c-cover-cost">—</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Мех. обработка</span>
-          <span class="result-value" id="r-c-mech-cost">1 500</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Вальцовка</span>
-          <span class="result-value" id="r-c-roll-cost">1 200</span>
-        </div>
-        <div class="result-row" id="r-c-rib-row">
-          <span class="result-label">Рёбра усиления</span>
-          <span class="result-value" id="r-c-rib-cost">—</span>
-        </div>
-        <div class="result-row" id="r-c-perf-row">
-          <span class="result-label">Перфорация (<span id="r-c-perf-cnt">—</span> отв.)</span>
-          <span class="result-value" id="r-c-perf-cost">—</span>
+        <div class="result-row" id="r-c-cover-row">
+          <span class="result-label" id="r-c-cover-label">Покрытие (материал)</span>
+          <span class="result-value" id="r-c-cover-mat-cost">—</span>
         </div>
         <div class="result-row">
           <span class="result-label">Упаковка</span>
@@ -812,10 +847,61 @@
           <span class="result-label">Доставка</span>
           <span class="result-value" id="r-c-del-cost">—</span>
         </div>
+        <div class="result-section-subtotal mat">
+          <span>Итого материалы:</span>
+          <span id="r-c-mat-total">—</span>
+        </div>
+
+        <!-- БЛОК: РАБОТЫ -->
+        <div class="result-section-title work">
+          <span>⚙️ Работы</span>
+          <span id="r-c-work-pct">—%</span>
+        </div>
+        <div class="result-row" id="r-c-powder-work-row" style="display:none">
+          <span class="result-label">Работы по покраске</span>
+          <span class="result-value" id="r-c-powder-work-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Мех. обработка</span>
+          <span class="result-value" id="r-c-mech-cost">1 500 ₽</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Вальцовка</span>
+          <span class="result-value" id="r-c-roll-cost">1 200 ₽</span>
+        </div>
+        <div class="result-row" id="r-c-rib-row">
+          <span class="result-label">Рёбра усиления</span>
+          <span class="result-value" id="r-c-rib-cost">—</span>
+        </div>
+        <div class="result-row" id="r-c-perf-row">
+          <span class="result-label">Перфорация (<span id="r-c-perf-cnt">—</span> отв.)</span>
+          <span class="result-value" id="r-c-perf-cost">—</span>
+        </div>
+        <div class="result-section-subtotal work">
+          <span>Итого работы:</span>
+          <span id="r-c-work-total">—</span>
+        </div>
+
+        <!-- ПОЛОСА СООТНОШЕНИЯ -->
+        <div class="ratio-bar-wrap">
+          <div class="ratio-bar">
+            <div class="ratio-bar-mat"  id="r-c-bar-mat"  style="width:50%"></div>
+            <div class="ratio-bar-work" id="r-c-bar-work" style="width:50%"></div>
+          </div>
+          <div class="ratio-labels">
+            <span>Материалы <span id="r-c-bar-mat-lbl">50%</span></span>
+            <span>Работы <span id="r-c-bar-work-lbl">50%</span></span>
+          </div>
+        </div>
 
         <div class="result-total">
           <div class="label">Себестоимость</div>
           <div class="value" id="r-c-total">4 601 ₽/м²</div>
+        </div>
+
+        <!-- Стоимость за развёртку (доп., мелко) -->
+        <div class="result-develop-hint" id="r-c-develop-hint" style="display:none">
+          за развёртку: <span id="r-c-total-develop">—</span>
         </div>
 
         <div class="result-markup">
@@ -827,7 +913,10 @@
           <div class="label">Итого с наценкой</div>
           <div class="value" id="r-c-final">5 521 ₽</div>
         </div>
-        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">за 1 м² · <span id="r-c-unit-bot">развёртка</span></div>
+        <div class="result-develop-hint" id="r-c-final-develop-hint" style="display:none">
+          с наценкой за развёртку: <span id="r-c-final-develop">—</span>
+        </div>
+        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px">за 1 м² · <span id="r-c-unit-bot">развёртка</span></div>
       </div>
     </div>
   </div>
@@ -1264,44 +1353,42 @@ function calcCassette() {
   // Стоимость материала
   const matCost = matArea * priceM2;
 
-  // --- ПОКРЫТИЕ ---
-  let coverCost = 0;
+  // --- ПОКРЫТИЕ — разделяем на материал и работу ---
+  let coverMatCost  = 0;  // материальная часть покрытия (подряд/закупка)
+  let coverWorkCost = 0;  // рабочая часть покрытия (только порошковая работа)
   const cover = document.getElementById('c_cover').value;
 
   if (cover === 'powder') {
-    // По развёртке, БЕЗ отходов
     const paintKg = parseFloat(document.getElementById('c_powder_price_kg').value) || 0;
     const workM2  = parseFloat(document.getElementById('c_powder_work').value) || 0;
-    // 200 г/м² = 0.2 кг/м²
     const paintCost = developArea * 0.2 * paintKg;
     const workCost  = developArea * workM2;
-    coverCost = (paintCost + workCost) * cPowderSides;
+    coverMatCost  = paintCost * cPowderSides;   // краска → материалы
+    coverWorkCost = workCost  * cPowderSides;   // работа → работы
   } else if (cover === 'pvdf') {
     const pM2 = parseFloat(document.getElementById('c_pvdf_price').value) || 0;
-    // По площади листа включая отходы
-    coverCost = coefTr * wasteK * pM2 * cPvdfSides;
+    coverMatCost = coefTr * wasteK * pM2 * cPvdfSides;
   } else if (cover === 'pe') {
     const pM2 = parseFloat(document.getElementById('c_pe_price').value) || 0;
-    coverCost = coefTr * wasteK * pM2 * cPeSides;
+    coverMatCost = coefTr * wasteK * pM2 * cPeSides;
   } else if (cover === 'anod') {
     const pM2 = parseFloat(document.getElementById('c_anod_price').value) || 0;
-    coverCost = coefTr * wasteK * pM2;
+    coverMatCost = coefTr * wasteK * pM2;
   } else if (cover === 'nitrid') {
     const pM2 = parseFloat(document.getElementById('c_nitrid_price').value) || 0;
-    coverCost = coefTr * wasteK * pM2;
+    coverMatCost = coefTr * wasteK * pM2;
   } else if (cover === 'oxide') {
     const pM2 = parseFloat(document.getElementById('c_oxide_price').value) || 0;
-    coverCost = developArea * pM2;
+    coverMatCost = developArea * pM2;
   }
+  const coverCost = coverMatCost + coverWorkCost;
 
   // --- РАБОТЫ ---
   const mechCost = (parseFloat(document.getElementById('c_work_mech').value) || 0) * developArea;
   const rollCost = (parseFloat(document.getElementById('c_work_roll').value) || 0) * developArea;
+  const ribCost  = (parseFloat(document.getElementById('c_work_rib').value)  || 0) * developArea;
 
-  const ribCost = (parseFloat(document.getElementById('c_work_rib').value) || 0) * developArea;
-
-  let perfCost = 0;
-  let perfCount = 0;
+  let perfCost = 0, perfCount = 0;
   const perfPriceEach = parseFloat(document.getElementById('c_perf_price').value) || 0;
   if (perfPriceEach > 0) {
     perfCount = calcCPerf();
@@ -1309,26 +1396,89 @@ function calcCassette() {
   }
 
   const packCost = (parseFloat(document.getElementById('c_work_pack').value) || 0) * developArea;
-  const delCost  = (parseFloat(document.getElementById('c_work_del').value) || 0) * developArea;
+  const delCost  = (parseFloat(document.getElementById('c_work_del').value)  || 0) * developArea;
 
-  const total = matCost + coverCost + mechCost + rollCost + ribCost + perfCost + packCost + delCost;
+  // --- ГРУППИРОВКА ---
+  // Материалы: металл + покрытие(материал) + упаковка + доставка
+  const groupMat  = matCost + coverMatCost + packCost + delCost;
+  // Работы: работы покраски + мех + вальцовка + рёбра + перфорация
+  const groupWork = coverWorkCost + mechCost + rollCost + ribCost + perfCost;
+
+  const total = groupMat + groupWork;
   const markup = parseFloat(document.getElementById('c_markup').value) || 0;
   const finalPrice = total * (1 + markup/100);
+
+  const matPct  = total > 0 ? Math.round(groupMat  / total * 100) : 0;
+  const workPct = total > 0 ? Math.round(groupWork / total * 100) : 0;
 
   // --- ВЫВОД ---
   document.getElementById('r-c-mat-area').textContent   = matArea.toFixed(3) + ' м²';
   document.getElementById('r-c-mat-weight').textContent = (matArea * weightM2).toFixed(3) + ' кг';
   document.getElementById('r-c-mat-cost').textContent   = fmtR(matCost);
-  document.getElementById('r-c-cover-cost').textContent = cover === 'none' ? '—' : fmtR(coverCost);
-  document.getElementById('r-c-mech-cost').textContent  = fmtR(mechCost);
-  document.getElementById('r-c-roll-cost').textContent  = fmtR(rollCost);
-  document.getElementById('r-c-rib-cost').textContent   = ribCost > 0 ? fmtR(ribCost) : '—';
+
+  // Покрытие (материальная часть)
+  const coverRowEl = document.getElementById('r-c-cover-row');
+  if (coverMatCost > 0) {
+    coverRowEl.style.display = '';
+    const coverLabels = {
+      powder: 'Краска порошковая', pvdf: 'PVDF (подряд)',
+      pe: 'PE покрытие (подряд)', anod: 'Анодирование (подряд)',
+      nitrid: 'Нитрирование (подряд)', oxide: 'Оксидирование'
+    };
+    document.getElementById('r-c-cover-label').textContent = coverLabels[cover] || 'Покрытие (материал)';
+    document.getElementById('r-c-cover-mat-cost').textContent = fmtR(coverMatCost);
+  } else {
+    coverRowEl.style.display = cover === 'none' ? 'none' : '';
+    document.getElementById('r-c-cover-label').textContent = 'Покрытие (материал)';
+    document.getElementById('r-c-cover-mat-cost').textContent = '—';
+  }
+
+  document.getElementById('r-c-pack-cost').textContent  = packCost > 0 ? fmtR(packCost) : '—';
+  document.getElementById('r-c-del-cost').textContent   = delCost  > 0 ? fmtR(delCost)  : '—';
+  document.getElementById('r-c-mat-total').textContent  = fmtR(groupMat);
+  document.getElementById('r-c-mat-pct').textContent    = matPct + '%';
+
+  // Работы покраски
+  const pwWorkRow = document.getElementById('r-c-powder-work-row');
+  if (coverWorkCost > 0) {
+    pwWorkRow.style.display = '';
+    document.getElementById('r-c-powder-work-cost').textContent = fmtR(coverWorkCost);
+  } else {
+    pwWorkRow.style.display = 'none';
+  }
+
+  document.getElementById('r-c-mech-cost').textContent  = mechCost > 0 ? fmtR(mechCost) : '—';
+  document.getElementById('r-c-roll-cost').textContent  = rollCost > 0 ? fmtR(rollCost) : '—';
+  document.getElementById('r-c-rib-cost').textContent   = ribCost  > 0 ? fmtR(ribCost)  : '—';
   document.getElementById('r-c-perf-cost').textContent  = perfCost > 0 ? fmtR(perfCost) : '—';
   document.getElementById('r-c-perf-cnt').textContent   = perfCount > 0 ? fmt(perfCount) : '—';
-  document.getElementById('r-c-pack-cost').textContent  = packCost > 0 ? fmtR(packCost) : '—';
-  document.getElementById('r-c-del-cost').textContent   = delCost > 0 ? fmtR(delCost) : '—';
-  document.getElementById('r-c-total').textContent      = fmtR(total) + ' ₽/м²';
-  document.getElementById('r-c-final').textContent      = fmtR(finalPrice) + ' ₽';
+  document.getElementById('r-c-work-total').textContent = groupWork > 0 ? fmtR(groupWork) : '—';
+  document.getElementById('r-c-work-pct').textContent   = workPct + '%';
+
+  // Полоса соотношения
+  document.getElementById('r-c-bar-mat').style.width    = matPct  + '%';
+  document.getElementById('r-c-bar-work').style.width   = workPct + '%';
+  document.getElementById('r-c-bar-mat-lbl').textContent  = matPct  + '%';
+  document.getElementById('r-c-bar-work-lbl').textContent = workPct + '%';
+
+  // Итог
+  document.getElementById('r-c-total').textContent    = fmtR(total) + ' ₽/м²';
+  document.getElementById('r-c-final').textContent    = fmtR(finalPrice) + ' ₽';
+
+  // Доп. стоимость за развёртку (если выбрана не развёртка)
+  const developHint      = document.getElementById('r-c-develop-hint');
+  const finalDevelopHint = document.getElementById('r-c-final-develop-hint');
+  if (cUnit !== 'develop' && coefTr && coefTr !== 1) {
+    const totalDevelop = total / coefTr;
+    const finalDevelop = finalPrice / coefTr;
+    developHint.style.display      = '';
+    finalDevelopHint.style.display = '';
+    document.getElementById('r-c-total-develop').textContent = fmtR(totalDevelop) + ' ₽/м² (развёртка)';
+    document.getElementById('r-c-final-develop').textContent = fmtR(finalDevelop) + ' ₽/м² (развёртка)';
+  } else {
+    developHint.style.display      = 'none';
+    finalDevelopHint.style.display = 'none';
+  }
 }
 
 // ═══════════════════════════════════════════
