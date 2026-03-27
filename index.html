@@ -866,6 +866,13 @@
       <div class="card-header"><div class="step-num">2</div><h3>Материал</h3></div>
       <div class="card-body">
         <div class="field-wrap">
+          <div class="field-label-row">
+            <label>Толщина материала (мм)</label>
+            <span class="tip" data-tip="Укажите толщину листа или профиля">?</span>
+          </div>
+          <input type="number" id="m_thick" value="4" min="0.5" max="100" step="0.5" oninput="calcMK()">
+        </div>
+        <div class="field-wrap">
           <label>Вид материала</label>
           <select id="m_material" onchange="onMMaterialChange()">
             <option value="al">Алюминий</option>
@@ -881,13 +888,6 @@
             <option value="brass">Латунь</option>
             <option value="corten">Кортен (российский аналог Ст606)</option>
           </select>
-        </div>
-        <div class="field-wrap">
-          <div class="field-label-row">
-            <label>Толщина (мм)</label>
-            <span class="tip" data-tip="Укажите толщину листа или профиля. Используется для расчёта площади покрытия и справки">?</span>
-          </div>
-          <input type="number" id="m_thick" value="4" min="0.5" max="100" step="0.5" oninput="calcMK()">
         </div>
         <div class="field-row">
           <div>
