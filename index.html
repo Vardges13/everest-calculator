@@ -676,6 +676,7 @@
             <option value="anod">Анодирование</option>
             <option value="nitrid">Нитрид титана</option>
             <option value="oxide">Оксидация</option>
+            <option value="sublim">Сублимация</option>
           </select>
         </div>
 
@@ -755,6 +756,15 @@
           <div class="field-wrap">
             <label>Стоимость услуги (руб/м²)</label>
             <input type="number" id="c_oxide_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcCassette()">
+          </div>
+        </div>
+
+        <!-- Сублимация -->
+        <div id="c-cov-sublim" class="cover-options">
+          <div class="info-box">Расчёт по <strong>развёртке</strong> без отходной части.</div>
+          <div class="field-wrap">
+            <label>Стоимость сублимации (руб/м²)</label>
+            <input type="number" id="c_sublim_price" value="0" min="0" placeholder="Введите стоимость" oninput="calcCassette()">
           </div>
         </div>
       </div>
@@ -1282,7 +1292,7 @@ function onCMaterialChange() {
 // ═══════════════════════════════════════════
 function onCCoverChange() {
   const val = document.getElementById('c_cover').value;
-  const ids = ['powder','pvdf','pe','anod','nitrid','oxide'];
+  const ids = ['powder','pvdf','pe','anod','nitrid','oxide','sublim'];
   ids.forEach(id => {
     const el = document.getElementById('c-cov-' + id);
     if (el) el.classList.toggle('show', val === id);
@@ -1380,6 +1390,9 @@ function calcCassette() {
   } else if (cover === 'oxide') {
     const pM2 = parseFloat(document.getElementById('c_oxide_price').value) || 0;
     coverMatCost = developArea * pM2;
+  } else if (cover === 'sublim') {
+    const pM2 = parseFloat(document.getElementById('c_sublim_price').value) || 0;
+    coverMatCost = developArea * pM2;
   }
   const coverCost = coverMatCost + coverWorkCost;
 
@@ -1423,7 +1436,8 @@ function calcCassette() {
     const coverLabels = {
       powder: 'Краска порошковая', pvdf: 'PVDF (подряд)',
       pe: 'PE покрытие (подряд)', anod: 'Анодирование (подряд)',
-      nitrid: 'Нитрирование (подряд)', oxide: 'Оксидирование'
+      nitrid: 'Нитрирование (подряд)', oxide: 'Оксидирование',
+      sublim: 'Сублимация (подряд)'
     };
     document.getElementById('r-c-cover-label').textContent = coverLabels[cover] || 'Покрытие (материал)';
     document.getElementById('r-c-cover-mat-cost').textContent = fmtR(coverMatCost);
