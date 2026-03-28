@@ -920,8 +920,12 @@
         </div>
 
         <div class="result-final">
-          <div class="label">Итого с наценкой</div>
+          <div class="label">Итого с наценкой (с НДС 22%)</div>
           <div class="value" id="r-c-final">5 521 ₽</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);padding:4px 4px 0">
+          <span>Без НДС: <span id="r-c-final-no-vat">—</span></span>
+          <span>в т.ч. НДС: <span id="r-c-final-vat">—</span></span>
         </div>
         <div class="result-develop-hint" id="r-c-final-develop-hint" style="display:none">
           с наценкой за развёртку: <span id="r-c-final-develop">—</span>
@@ -1209,8 +1213,12 @@
         </div>
 
         <div class="result-final">
-          <div class="label">Итого с наценкой</div>
+          <div class="label">Итого с наценкой (с НДС 22%)</div>
           <div class="value" id="r-m-final">215 ₽</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);padding:4px 4px 0">
+          <span>Без НДС: <span id="r-m-final-no-vat">—</span></span>
+          <span>в т.ч. НДС: <span id="r-m-final-vat">—</span></span>
         </div>
         <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">за 1 кг готового изделия</div>
       </div>
@@ -1478,6 +1486,11 @@ function calcCassette() {
   // Итог
   document.getElementById('r-c-total').textContent    = fmtR(total) + ' ₽/м²';
   document.getElementById('r-c-final').textContent    = fmtR(finalPrice) + ' ₽';
+  // НДС 22% — цена уже включает НДС
+  const cVat = finalPrice * 22 / 122;
+  const cNoVat = finalPrice - cVat;
+  document.getElementById('r-c-final-vat').textContent    = fmtR(cVat);
+  document.getElementById('r-c-final-no-vat').textContent = fmtR(cNoVat);
 
   // Доп. стоимость за развёртку (если выбрана не развёртка)
   const developHint      = document.getElementById('r-c-develop-hint');
@@ -1637,6 +1650,11 @@ function calcMK() {
   document.getElementById('r-m-del-cost').textContent  = delCost > 0 ? fmtR(delCost) : '—';
   document.getElementById('r-m-total').textContent     = fmtR(total) + ' ₽/кг';
   document.getElementById('r-m-final').textContent     = fmtR(finalPrice) + ' ₽';
+  // НДС 22% — цена уже включает НДС
+  const mVat = finalPrice * 22 / 122;
+  const mNoVat = finalPrice - mVat;
+  document.getElementById('r-m-final-vat').textContent    = fmtR(mVat);
+  document.getElementById('r-m-final-no-vat').textContent = fmtR(mNoVat);
 }
 
 // ═══════════════════════════════════════════
