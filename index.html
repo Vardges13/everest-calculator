@@ -1177,21 +1177,18 @@
           <span class="result-label">Потребность в материале</span>
           <span class="result-value" id="r-m-mat-need">1.10 кг</span>
         </div>
-        <div class="result-row">
-          <span class="result-label">Стоимость материала</span>
-          <span class="result-value accent" id="r-m-mat-cost">99</span>
+        <!-- БЛОК: МАТЕРИАЛЫ МК -->
+        <div class="result-section-title mat">
+          <span>📦 Материалы и подряд</span>
+          <span id="r-m-mat-pct">—%</span>
         </div>
         <div class="result-row">
-          <span class="result-label">Покрытие</span>
-          <span class="result-value" id="r-m-cover-cost">—</span>
+          <span class="result-label">Металл</span>
+          <span class="result-value accent" id="r-m-mat-cost">99 ₽</span>
         </div>
-        <div class="result-row">
-          <span class="result-label">Сварка</span>
-          <span class="result-value" id="r-m-weld-cost">80</span>
-        </div>
-        <div class="result-row" id="r-m-perf-row">
-          <span class="result-label">Перфорация (<span id="r-m-perf-cnt">—</span> отв/м²)</span>
-          <span class="result-value" id="r-m-perf-cost">—</span>
+        <div class="result-row" id="r-m-cover-mat-row">
+          <span class="result-label" id="r-m-cover-mat-label">Покрытие (материал)</span>
+          <span class="result-value" id="r-m-cover-mat-cost">—</span>
         </div>
         <div class="result-row">
           <span class="result-label">Упаковка</span>
@@ -1200,6 +1197,44 @@
         <div class="result-row">
           <span class="result-label">Доставка</span>
           <span class="result-value" id="r-m-del-cost">—</span>
+        </div>
+        <div class="result-section-subtotal mat">
+          <span>Итого материалы:</span>
+          <span id="r-m-mat-group-total">—</span>
+        </div>
+
+        <!-- БЛОК: РАБОТЫ МК -->
+        <div class="result-section-title work">
+          <span>⚙️ Работы</span>
+          <span id="r-m-work-pct">—%</span>
+        </div>
+        <div class="result-row" id="r-m-powder-work-row" style="display:none">
+          <span class="result-label">Работы по покраске</span>
+          <span class="result-value" id="r-m-powder-work-cost">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Сварка</span>
+          <span class="result-value" id="r-m-weld-cost">80 ₽</span>
+        </div>
+        <div class="result-row" id="r-m-perf-row">
+          <span class="result-label">Перфорация (<span id="r-m-perf-cnt">—</span> отв/м²)</span>
+          <span class="result-value" id="r-m-perf-cost">—</span>
+        </div>
+        <div class="result-section-subtotal work">
+          <span>Итого работы:</span>
+          <span id="r-m-work-group-total">—</span>
+        </div>
+
+        <!-- ПОЛОСА СООТНОШЕНИЯ МК -->
+        <div class="ratio-bar-wrap">
+          <div class="ratio-bar">
+            <div class="ratio-bar-mat"  id="r-m-bar-mat"  style="width:50%"></div>
+            <div class="ratio-bar-work" id="r-m-bar-work" style="width:50%"></div>
+          </div>
+          <div class="ratio-labels">
+            <span>Материалы <span id="r-m-bar-mat-lbl">50%</span></span>
+            <span>Работы <span id="r-m-bar-work-lbl">50%</span></span>
+          </div>
         </div>
 
         <div class="result-total">
@@ -1590,33 +1625,32 @@ function calcMK() {
   const matNeed = wasteK; // кг
   const matCost = matNeed * priceKg;
 
-  // --- ПОКРЫТИЕ ---
-  let coverCost = 0;
+  // --- ПОКРЫТИЕ — разделяем на материал и работу ---
+  let mCoverMatCost  = 0;  // материальная часть (подряд/закупка)
+  let mCoverWorkCost = 0;  // рабочая часть (только порошковая работа)
   const cover = document.getElementById('m_cover').value;
 
   if (cover === 'powder') {
     const areaPerKg = parseFloat(document.getElementById('m_powder_area_per_kg').value) || 0;
     const paintKg   = parseFloat(document.getElementById('m_powder_price_kg').value) || 0;
     const workM2    = parseFloat(document.getElementById('m_powder_work').value) || 0;
-    const paintCost = areaPerKg * 0.2 * paintKg;
-    const workCost  = areaPerKg * workM2;
-    coverCost = (paintCost + workCost) * mPowderSides;
+    mCoverMatCost  = areaPerKg * 0.2 * paintKg * mPowderSides;  // краска → материалы
+    mCoverWorkCost = areaPerKg * workM2 * mPowderSides;          // работа → работы
   } else if (cover === 'hotzinc') {
-    coverCost = parseFloat(document.getElementById('m_hotzinc_price').value) || 0;
+    mCoverMatCost = parseFloat(document.getElementById('m_hotzinc_price').value) || 0;
   } else if (cover === 'thermodiff') {
-    coverCost = parseFloat(document.getElementById('m_thermodiff_price').value) || 0;
+    mCoverMatCost = parseFloat(document.getElementById('m_thermodiff_price').value) || 0;
   } else if (cover === 'galvanic') {
-    coverCost = parseFloat(document.getElementById('m_galvanic_price').value) || 0;
+    mCoverMatCost = parseFloat(document.getElementById('m_galvanic_price').value) || 0;
   } else if (cover === 'hotzinc_powder') {
     const zincPrice = parseFloat(document.getElementById('m_hz_pw_zinc_price').value) || 0;
     const area      = parseFloat(document.getElementById('m_hz_pw_area').value) || 0;
     const paintKg   = parseFloat(document.getElementById('m_hz_pw_paint_kg').value) || 0;
     const workM2    = parseFloat(document.getElementById('m_hz_pw_work').value) || 0;
-    const zincCost  = zincPrice;
-    const paintCost = area * 0.2 * paintKg;
-    const workCost  = area * workM2;
-    coverCost = zincCost + (paintCost + workCost) * mHZPSides;
+    mCoverMatCost  = zincPrice + area * 0.2 * paintKg * mHZPSides;  // цинк + краска → материалы
+    mCoverWorkCost = area * workM2 * mHZPSides;                      // работа покраски → работы
   }
+  const coverCost = mCoverMatCost + mCoverWorkCost;
 
   // --- РАБОТЫ ---
   const weldCost = parseFloat(document.getElementById('m_work_weld').value) || 0;
@@ -1633,24 +1667,71 @@ function calcMK() {
   const packCost = parseFloat(document.getElementById('m_work_pack').value) || 0;
   const delCost  = parseFloat(document.getElementById('m_work_del').value) || 0;
 
-  const total = matCost + coverCost + weldCost + perfCost + packCost + delCost;
+  // --- ГРУППИРОВКА ---
+  // Материалы: металл + покрытие(материал) + упаковка + доставка
+  const mGroupMat  = matCost + mCoverMatCost + packCost + delCost;
+  // Работы: работы покраски + сварка + перфорация
+  const mGroupWork = mCoverWorkCost + weldCost + perfCost;
+
+  const total = mGroupMat + mGroupWork;
   const markup = parseFloat(document.getElementById('m_markup').value) || 0;
   const finalPrice = total * (1 + markup/100);
+
+  const mMatPct  = total > 0 ? Math.round(mGroupMat  / total * 100) : 0;
+  const mWorkPct = total > 0 ? Math.round(mGroupWork / total * 100) : 0;
 
   // --- ВЫВОД ---
   const mThick = parseFloat(document.getElementById('m_thick').value) || 0;
   document.getElementById('r-m-thick').textContent     = mThick > 0 ? mThick + ' мм' : '—';
   document.getElementById('r-m-mat-need').textContent  = matNeed.toFixed(3) + ' кг';
   document.getElementById('r-m-mat-cost').textContent  = fmtR(matCost);
-  document.getElementById('r-m-cover-cost').textContent= cover === 'none' ? '—' : fmtR(coverCost);
-  document.getElementById('r-m-weld-cost').textContent = fmtR(weldCost);
+
+  // Покрытие (материальная часть)
+  const mCoverRow = document.getElementById('r-m-cover-mat-row');
+  if (mCoverMatCost > 0) {
+    mCoverRow.style.display = '';
+    const mCoverLabels = {
+      powder: 'Краска порошковая', hotzinc: 'Горячий цинк (подряд)',
+      thermodiff: 'Термодиффузия (подряд)', galvanic: 'Гальваника (подряд)',
+      hotzinc_powder: 'Гор. цинк + краска (подряд)'
+    };
+    document.getElementById('r-m-cover-mat-label').textContent = mCoverLabels[cover] || 'Покрытие (материал)';
+    document.getElementById('r-m-cover-mat-cost').textContent = fmtR(mCoverMatCost);
+  } else {
+    mCoverRow.style.display = cover === 'none' ? 'none' : '';
+    document.getElementById('r-m-cover-mat-label').textContent = 'Покрытие (материал)';
+    document.getElementById('r-m-cover-mat-cost').textContent = '—';
+  }
+
+  document.getElementById('r-m-pack-cost').textContent = packCost > 0 ? fmtR(packCost) : '—';
+  document.getElementById('r-m-del-cost').textContent  = delCost  > 0 ? fmtR(delCost)  : '—';
+  document.getElementById('r-m-mat-group-total').textContent = fmtR(mGroupMat);
+  document.getElementById('r-m-mat-pct').textContent   = mMatPct + '%';
+
+  // Работы покраски
+  const mPwWorkRow = document.getElementById('r-m-powder-work-row');
+  if (mCoverWorkCost > 0) {
+    mPwWorkRow.style.display = '';
+    document.getElementById('r-m-powder-work-cost').textContent = fmtR(mCoverWorkCost);
+  } else {
+    mPwWorkRow.style.display = 'none';
+  }
+
+  document.getElementById('r-m-weld-cost').textContent = weldCost > 0 ? fmtR(weldCost) : '—';
   document.getElementById('r-m-perf-cost').textContent = perfCost > 0 ? fmtR(perfCost) : '—';
   document.getElementById('r-m-perf-cnt').textContent  = perfCount > 0 ? fmt(perfCount) : '—';
-  document.getElementById('r-m-pack-cost').textContent = packCost > 0 ? fmtR(packCost) : '—';
-  document.getElementById('r-m-del-cost').textContent  = delCost > 0 ? fmtR(delCost) : '—';
+  document.getElementById('r-m-work-group-total').textContent = mGroupWork > 0 ? fmtR(mGroupWork) : '—';
+  document.getElementById('r-m-work-pct').textContent  = mWorkPct + '%';
+
+  // Полоса соотношения
+  document.getElementById('r-m-bar-mat').style.width    = mMatPct  + '%';
+  document.getElementById('r-m-bar-work').style.width   = mWorkPct + '%';
+  document.getElementById('r-m-bar-mat-lbl').textContent  = mMatPct  + '%';
+  document.getElementById('r-m-bar-work-lbl').textContent = mWorkPct + '%';
+
   document.getElementById('r-m-total').textContent     = fmtR(total) + ' ₽/кг';
   document.getElementById('r-m-final').textContent     = fmtR(finalPrice) + ' ₽';
-  // НДС 22% — цена уже включает НДС
+  // НДС 22%
   const mVat = finalPrice * 22 / 122;
   const mNoVat = finalPrice - mVat;
   document.getElementById('r-m-final-vat').textContent    = fmtR(mVat);
