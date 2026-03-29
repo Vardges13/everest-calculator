@@ -1278,9 +1278,6 @@
         <div>
           <label>Ширина рулона (мм)</label>
           <select id="n_sheet_w" onchange="nestCalc()">
-            <option value="1250" selected>1250</option>
-            <option value="1500">1500</option>
-            <option value="1000">1000</option>
           </select>
         </div>
         <div>
@@ -1930,9 +1927,43 @@ function nestDelRow(btn) {
     [...body.children].forEach((tr, i) => { tr.cells[0].textContent = i + 1; });
   }
 }
+// Стандартные ширины рулонов по материалам
+const COIL_WIDTHS = {
+  al:      [1200, 1500, 2000],
+  al_srb:  [1200, 1500],
+  zinc:    [1250, 1500],
+  st3:     [1250, 1500],
+  n304s:   [1000, 1219, 1250, 1500],
+  n304z:   [1000, 1219, 1250, 1500],
+  n430s:   [1000, 1219, 1250],
+  n430z:   [1000, 1219, 1250],
+  n_rip:   [1000, 1219, 1250],
+  copper:  [600, 1000],
+  brass:   [600, 1000],
+  corten:  [1250, 1500],
+};
+
 function nestUpdatePrice() {
-  const mat = MATERIALS[document.getElementById('n_material').value];
+  const matKey = document.getElementById('n_material').value;
+  const mat = MATERIALS[matKey];
   if (mat) document.getElementById('n_price').value = mat.price;
+
+  // Обновляем ширины рулонов
+  const sel = document.getElementById('n_sheet_w');
+  const curVal = sel.value;
+  const widths = COIL_WIDTHS[matKey] || [1250, 1500];
+  sel.innerHTML = '';
+  widths.forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w;
+    opt.textContent = w;
+    if (w == curVal) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  // Если текущая ширина не в списке — выбрать первую
+  if (!widths.includes(parseInt(curVal))) {
+    sel.value = widths[0];
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -2214,6 +2245,7 @@ window.addEventListener('DOMContentLoaded', () => {
   onMMaterialChange();
   calcCassette();
   calcMK();
+  nestUpdatePrice();
 });
 </script>
 </body>
