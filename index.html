@@ -1967,10 +1967,9 @@ function nestUpdatePrice() {
 }
 
 // ═══════════════════════════════════════════
-// РАСКРОЙ — АЛГОРИТМ
+// РАСКРОЙ — АЛГОРИТМ v2 (Shelf Best-Fit + Fill)
 // ═══════════════════════════════════════════
 function nestCalc() {
-  // Собираем спецификацию
   const body = document.getElementById('n-spec-body');
   const rows = [...body.children];
   const parts = [];
@@ -1982,140 +1981,181 @@ function nestCalc() {
     const qty = parseInt(inputs[3].value) || 0;
     if (w > 0 && l > 0 && qty > 0) {
       for (let i = 0; i < qty; i++) {
-        parts.push({ name, w, l, idx: parts.length });
+        parts.push({ name, w, l, id: parts.length });
       }
     }
   });
   if (parts.length === 0) return;
 
-  const sheetW  = parseInt(document.getElementById('n_sheet_w').value) || 1250;
+  const sheetW   = parseInt(document.getElementById('n_sheet_w').value) || 1250;
   const sheetMin = parseInt(document.getElementById('n_sheet_min').value) || 2000;
   const sheetMax = parseInt(document.getElementById('n_sheet_max').value) || 6000;
-  const step    = parseInt(document.getElementById('n_step').value) || 100;
-  const gap     = parseInt(document.getElementById('n_gap').value) || 5;
-  const margin  = parseInt(document.getElementById('n_margin').value) || 10;
-  const thick   = parseFloat(document.getElementById('n_thick').value) || 2;
-  const priceKg = parseFloat(document.getElementById('n_price').value) || 0;
-  const mat     = MATERIALS[document.getElementById('n_material').value];
-  const density = mat ? mat.density : 7.85;
+  const step     = parseInt(document.getElementById('n_step').value) || 100;
+  const gap      = parseInt(document.getElementById('n_gap').value) || 5;
+  const margin   = parseInt(document.getElementById('n_margin').value) || 10;
+  const thick    = parseFloat(document.getElementById('n_thick').value) || 2;
+  const priceKg  = parseFloat(document.getElementById('n_price').value) || 0;
+  const mat      = MATERIALS[document.getElementById('n_material').value];
+  const density  = mat ? mat.density : 7.85;
+  const usableW  = sheetW - 2 * margin;
 
-  const usableW = sheetW - 2 * margin;
-
-  // Цвета для визуализации
   const COLORS = [
     '#3498db','#e67e22','#2ecc71','#9b59b6','#e74c3c',
     '#1abc9c','#f39c12','#8e44ad','#16a085','#d35400',
     '#2980b9','#c0392b','#27ae60','#7f8c8d','#2c3e50'
   ];
 
-  // Сортируем детали по длине (большие сначала) для лучшего раскроя
-  parts.sort((a, b) => {
-    const aMax = Math.max(a.w, a.l);
-    const bMax = Math.max(b.w, b.l);
-    return bMax - aMax || Math.min(b.w, b.l) - Math.min(a.w, a.l);
-  });
-
-  // Для каждой детали определяем ориентации
-  // Деталь помещается на лист шириной usableW, ориентация может быть w×l или l×w
-  function fitOrient(part) {
-    const opts = [];
-    if (part.w <= usableW) opts.push({ pw: part.w, pl: part.l, rotated: false });
-    if (part.l <= usableW && part.l !== part.w) opts.push({ pw: part.l, pl: part.w, rotated: true });
-    // Если ни одна ориентация не помещается по ширине — деталь не влезает
-    return opts;
+  // Ориентации: деталь может быть повёрнута (w↔l)
+  // Возвращаем варианты размещения {pw (по ширине листа), pl (по длине листа)}
+  function orientations(p) {
+    const res = [];
+    if (p.w <= usableW) res.push({ pw: p.w, pl: p.l });
+    if (p.l <= usableW && p.l !== p.w) res.push({ pw: p.l, pl: p.w });
+    return res;
   }
 
-  // Полосовой раскрой (strip-based)
-  // Каждый лист: полосы по высоте, в каждой полосе — детали в ряд по ширине
-  const sheets = []; // { len, strips: [{ y, h, items: [{x,y,pw,pl,part}] }] }
+  // Сортируем: сначала самые высокие (max длина), при равенстве — самые широкие
+  const sorted = [...parts];
+  sorted.sort((a, b) => {
+    const aH = Math.max(a.w, a.l), bH = Math.max(b.w, b.l);
+    if (bH !== aH) return bH - aH;
+    return Math.max(b.w, b.l) - Math.max(a.w, a.l);
+  });
+
+  // === SHELF BEST-FIT DECREASING ===
+  // Лист = набор полок (shelves). Полка имеет y-позицию, высоту h, и заполняется деталями по ширине.
+  // Ключевое отличие от v1: полка принимает ЛЮБУЮ деталь с высотой <= h (не только ровно h).
+  // Остаток высоты полки используется при финальном заполнении.
+
+  const sheets = []; // [{maxLen, shelves: [{y, h, curX, items:[{x,y,pw,pl,part}]}] }]
   const placed = new Set();
 
-  // Greedy: для каждой неразмещённой детали ищем место на существующих листах,
-  // если нет — создаём новый лист оптимальной длины
-  function addToSheet(sheet, part) {
-    const orients = fitOrient(part);
+  function bestShelfForPart(sheet, pw, pl) {
+    // Ищем полку где деталь помещается (pl <= shelf.h) и есть место по ширине
+    // Предпочитаем полку с минимальным остатком высоты (best fit)
+    let best = null, bestWaste = Infinity;
+    for (const shelf of sheet.shelves) {
+      if (pl > shelf.h) continue;
+      if (shelf.curX + pw + gap > sheetW - margin) continue;
+      const waste = shelf.h - pl;
+      if (waste < bestWaste) {
+        bestWaste = waste;
+        best = shelf;
+      }
+    }
+    return best;
+  }
+
+  function placeOnShelf(shelf, pw, pl, part) {
+    const x = shelf.curX;
+    shelf.items.push({ x, y: shelf.y, pw, pl, part });
+    shelf.curX = x + pw + gap;
+  }
+
+  function addNewShelf(sheet, pw, pl, part) {
+    const lastShelf = sheet.shelves[sheet.shelves.length - 1];
+    const newY = lastShelf ? lastShelf.y + lastShelf.h + gap : margin;
+    if (newY + pl > sheetMax) return false;
+    const shelf = { y: newY, h: pl, curX: margin + pw + gap, items: [{ x: margin, y: newY, pw, pl, part }] };
+    sheet.shelves.push(shelf);
+    return true;
+  }
+
+  function tryPlace(part) {
+    const orients = orientations(part);
     if (orients.length === 0) return false;
 
-    for (const { pw, pl, rotated } of orients) {
-      // Пробуем вставить в существующую полосу
-      for (const strip of sheet.strips) {
-        if (Math.abs(strip.h - pl) > 1) continue; // полоса другой высоты
-        const lastX = strip.items.length > 0 
-          ? strip.items[strip.items.length - 1].x + strip.items[strip.items.length - 1].pw + gap
-          : margin;
-        if (lastX + pw <= sheetW - margin) {
-          strip.items.push({ x: lastX, y: strip.y, pw, pl, part, rotated });
+    // 1) Пробуем существующие листы — ищем best-fit полку
+    for (const sheet of sheets) {
+      for (const { pw, pl } of orients) {
+        const shelf = bestShelfForPart(sheet, pw, pl);
+        if (shelf) {
+          placeOnShelf(shelf, pw, pl, part);
           return true;
         }
       }
-      // Новая полоса
-      const lastStrip = sheet.strips[sheet.strips.length - 1];
-      const newY = lastStrip 
-        ? lastStrip.y + lastStrip.h + gap 
-        : margin;
-      if (newY + pl <= sheet.len - margin) {
-        sheet.strips.push({ y: newY, h: pl, items: [{ x: margin, y: newY, pw, pl, part, rotated }] });
-        return true;
+    }
+
+    // 2) Пробуем добавить новую полку на существующий лист
+    for (const sheet of sheets) {
+      for (const { pw, pl } of orients) {
+        if (addNewShelf(sheet, pw, pl, part)) return true;
       }
+    }
+
+    // 3) Создаём новый лист
+    for (const { pw, pl } of orients) {
+      const newSheet = { shelves: [] };
+      const shelf = { y: margin, h: pl, curX: margin + pw + gap, items: [{ x: margin, y: margin, pw, pl, part }] };
+      newSheet.shelves.push(shelf);
+      sheets.push(newSheet);
+      return true;
     }
     return false;
   }
 
-  // Основной алгоритм
-  for (const part of parts) {
-    if (placed.has(part.idx)) continue;
-
-    let added = false;
-    // Пробуем разместить на существующих листах
-    for (const sheet of sheets) {
-      if (addToSheet(sheet, part)) {
-        placed.add(part.idx);
-        added = true;
-        break;
-      }
-    }
-    if (added) continue;
-
-    // Создаём новый лист — подбираем оптимальную длину
-    const orients = fitOrient(part);
-    if (orients.length === 0) continue; // деталь не помещается вообще
-
-    const minPartLen = Math.min(...orients.map(o => o.pl));
-    const needLen = minPartLen + 2 * margin;
-    let bestLen = Math.ceil(needLen / step) * step;
-    if (bestLen < sheetMin) bestLen = sheetMin;
-    if (bestLen > sheetMax) bestLen = sheetMax;
-
-    const newSheet = { len: bestLen, strips: [] };
-    if (addToSheet(newSheet, part)) {
-      sheets.push(newSheet);
-      placed.add(part.idx);
+  // Размещаем все детали
+  for (const part of sorted) {
+    if (tryPlace(part)) {
+      placed.add(part.id);
     }
   }
 
-  // Оптимизация: пробуем впихнуть ещё неразмещённые детали
-  // (повторный проход для оставшихся)
-  for (const part of parts) {
-    if (placed.has(part.idx)) continue;
-    for (const sheet of sheets) {
-      if (addToSheet(sheet, part)) {
-        placed.add(part.idx);
-        break;
-      }
-    }
-  }
-
-  // Оптимизация длины листов — обрезаем до фактически использованной + margin, кратно step
+  // === ОПТИМИЗАЦИЯ ДЛИНЫ ЛИСТОВ ===
   for (const sheet of sheets) {
     let maxUsed = 0;
-    for (const strip of sheet.strips) {
-      const stripEnd = strip.y + strip.h;
-      if (stripEnd > maxUsed) maxUsed = stripEnd;
+    for (const shelf of sheet.shelves) {
+      const end = shelf.y + shelf.h;
+      if (end > maxUsed) maxUsed = end;
     }
-    const needed = maxUsed + margin;
-    let optLen = Math.ceil(needed / step) * step;
-    if (optLen < sheetMin) optLen = sheetMin;
-    sheet.len = optLen;
+    let len = Math.ceil((maxUsed + margin) / step) * step;
+    if (len < sheetMin) len = sheetMin;
+    if (len > sheetMax) len = sheetMax;
+    sheet.len = len;
+  }
+
+  // === ФИНАЛЬНОЕ ЗАПОЛНЕНИЕ ===
+  // Проходим ещё раз по неразмещённым (если есть) и пустым местам
+  const unplacedParts = sorted.filter(p => !placed.has(p.id));
+  for (const part of unplacedParts) {
+    const orients = orientations(part);
+    for (const sheet of sheets) {
+      let done = false;
+      for (const { pw, pl } of orients) {
+        const shelf = bestShelfForPart(sheet, pw, pl);
+        if (shelf) {
+          placeOnShelf(shelf, pw, pl, part);
+          placed.add(part.id);
+          done = true;
+          break;
+        }
+      }
+      if (done) break;
+      for (const { pw, pl } of orients) {
+        const lastS = sheet.shelves[sheet.shelves.length - 1];
+        const newY = lastS ? lastS.y + lastS.h + gap : margin;
+        if (newY + pl <= sheet.len - margin) {
+          sheet.shelves.push({ y: newY, h: pl, curX: margin + pw + gap, items: [{ x: margin, y: newY, pw, pl, part }] });
+          placed.add(part.id);
+          done = true;
+          break;
+        }
+      }
+      if (done) break;
+    }
+  }
+
+  // === ПОВТОРНАЯ ОПТИМИЗАЦИЯ ДЛИНЫ ===
+  for (const sheet of sheets) {
+    let maxUsed = 0;
+    for (const shelf of sheet.shelves) {
+      const end = shelf.y + shelf.h;
+      if (end > maxUsed) maxUsed = end;
+    }
+    let len = Math.ceil((maxUsed + margin) / step) * step;
+    if (len < sheetMin) len = sheetMin;
+    if (len > sheetMax) len = sheetMax;
+    sheet.len = len;
   }
 
   // Подсчёт результатов
@@ -2125,8 +2165,8 @@ function nestCalc() {
 
   sheets.forEach(sheet => {
     totalSheetArea += sheetW * sheet.len;
-    sheet.strips.forEach(strip => {
-      strip.items.forEach(item => {
+    sheet.shelves.forEach(shelf => {
+      shelf.items.forEach(item => {
         totalPartArea += item.pw * item.pl;
         totalParts++;
       });
@@ -2158,7 +2198,7 @@ function nestCalc() {
   tblHtml += '<tr style="background:var(--bg);font-weight:600;font-size:11px;"><td style="padding:5px 8px">Лист</td><td>Размер (мм)</td><td>Деталей</td><td>КИМ</td><td>Площадь листа</td></tr>';
   sheets.forEach((sheet, si) => {
     let sPartArea = 0, sPartCount = 0;
-    sheet.strips.forEach(s => s.items.forEach(it => { sPartArea += it.pw * it.pl; sPartCount++; }));
+    sheet.shelves.forEach(s => s.items.forEach(it => { sPartArea += it.pw * it.pl; sPartCount++; }));
     const sArea = sheetW * sheet.len;
     const sKim = sArea > 0 ? (sPartArea / sArea * 100).toFixed(1) : '0';
     const bg = si % 2 === 0 ? '#fff' : 'var(--bg)';
@@ -2198,7 +2238,7 @@ function nestCalc() {
 
     // Рисуем детали
     let colorIdx = 0;
-    sheet.strips.forEach(strip => {
+    sheet.shelves.forEach(strip => {
       strip.items.forEach(item => {
         const x = item.x * scale;
         const y = item.y * scale;
