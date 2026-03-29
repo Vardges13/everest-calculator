@@ -542,6 +542,7 @@
 <div class="tabs-bar">
   <button class="tab-btn active" onclick="switchTab('cassette')">🔲 Кассеты</button>
   <button class="tab-btn" onclick="switchTab('mk')">🔩 Металлоконструкции</button>
+  <button class="tab-btn" onclick="switchTab('nesting')">✂️ Раскрой</button>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -1263,6 +1264,161 @@
 </div><!-- /main mk -->
 </div><!-- /tab-mk -->
 
+<!-- ═══════════════════════════════════════════
+     TAB: РАСКРОЙ
+     ═══════════════════════════════════════════ -->
+<div id="tab-nesting" class="hidden">
+<div style="max-width:1200px; margin:0 auto; padding:16px;">
+
+  <!-- ПАРАМЕТРЫ ЛИСТА -->
+  <div class="card">
+    <div class="card-header"><div class="step-num">1</div><h3>Параметры листа</h3></div>
+    <div class="card-body">
+      <div class="field-row">
+        <div>
+          <label>Ширина рулона (мм)</label>
+          <select id="n_sheet_w" onchange="nestCalc()">
+            <option value="1250" selected>1250</option>
+            <option value="1500">1500</option>
+            <option value="1000">1000</option>
+          </select>
+        </div>
+        <div>
+          <label>Мин. длина листа (мм)</label>
+          <input type="number" id="n_sheet_min" value="2000" min="500" max="6000" step="100" oninput="nestCalc()">
+        </div>
+        <div>
+          <label>Макс. длина листа (мм)</label>
+          <input type="number" id="n_sheet_max" value="6000" min="500" max="8000" step="100" oninput="nestCalc()">
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label>Шаг длины (мм)</label>
+          <input type="number" id="n_step" value="100" min="10" max="500" step="10">
+        </div>
+        <div>
+          <label>Зазор между деталями (мм)</label>
+          <input type="number" id="n_gap" value="5" min="0" max="50" step="1">
+        </div>
+        <div>
+          <label>Отступ от краёв (мм)</label>
+          <input type="number" id="n_margin" value="10" min="0" max="50" step="1">
+        </div>
+      </div>
+      <div class="field-row" style="margin-top:10px;">
+        <div>
+          <label>Материал</label>
+          <select id="n_material" onchange="nestUpdatePrice()">
+            <option value="al">Алюминий</option>
+            <option value="al_srb">Алюминий сербский</option>
+            <option value="zinc">Оцинковка</option>
+            <option value="st3" selected>Ст3</option>
+            <option value="n304s">Нержавейка 304 шл.</option>
+            <option value="n304z">Нержавейка 304 зерк.</option>
+            <option value="n430s">Нержавейка 430 шл.</option>
+            <option value="n430z">Нержавейка 430 зерк.</option>
+            <option value="copper">Медь</option>
+            <option value="brass">Латунь</option>
+            <option value="corten">Кортен</option>
+          </select>
+        </div>
+        <div>
+          <label>Толщина (мм)</label>
+          <input type="number" id="n_thick" value="2" min="0.5" max="20" step="0.5" oninput="nestCalc()">
+        </div>
+        <div>
+          <label>Цена (руб/кг)</label>
+          <input type="number" id="n_price" value="90" min="0" oninput="nestCalc()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- СПЕЦИФИКАЦИЯ -->
+  <div class="card">
+    <div class="card-header"><div class="step-num">2</div><h3>Спецификация заготовок</h3></div>
+    <div class="card-body">
+      <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;">Введите размеры развёрток (ширина × длина) и количество. Программа попробует с поворотом.</div>
+      <table id="n-spec-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:var(--bg);font-weight:600;font-size:11px;text-transform:uppercase;">
+            <td style="padding:6px 8px;width:30px">#</td>
+            <td style="padding:6px 8px">Название</td>
+            <td style="padding:6px 8px;width:100px">Ширина (мм)</td>
+            <td style="padding:6px 8px;width:100px">Длина (мм)</td>
+            <td style="padding:6px 8px;width:80px">Кол-во</td>
+            <td style="padding:6px 8px;width:40px"></td>
+          </tr>
+        </thead>
+        <tbody id="n-spec-body">
+          <tr>
+            <td style="padding:4px 8px;color:var(--text-light)">1</td>
+            <td><input type="text" value="Кассета 600×600" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><input type="number" value="660" min="10" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><input type="number" value="660" min="10" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><input type="number" value="50" min="1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><button onclick="nestDelRow(this)" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">✕</button></td>
+          </tr>
+          <tr>
+            <td style="padding:4px 8px;color:var(--text-light)">2</td>
+            <td><input type="text" value="Кассета 300×1200" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><input type="number" value="360" min="10" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><input type="number" value="1260" min="10" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><input type="number" value="30" min="1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+            <td><button onclick="nestDelRow(this)" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button onclick="nestAddRow()" style="margin-top:10px;padding:8px 20px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">+ Добавить изделие</button>
+      <button onclick="nestCalc()" style="margin-top:10px;margin-left:10px;padding:8px 24px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;">📐 Рассчитать раскрой</button>
+    </div>
+  </div>
+
+  <!-- РЕЗУЛЬТАТЫ -->
+  <div class="card" id="n-results" style="display:none;">
+    <div class="card-header" style="background:var(--green);"><div class="step-num" style="background:rgba(255,255,255,0.2);color:#fff;">3</div><h3 style="color:#fff;">Результат раскроя</h3></div>
+    <div class="card-body">
+      <!-- Сводка -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px;">
+        <div style="background:var(--green-bg);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;">КИМ (общий)</div>
+          <div style="font-size:28px;font-weight:800;color:var(--green);" id="n-r-kim">—</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;">Листов</div>
+          <div style="font-size:28px;font-weight:800;" id="n-r-sheets">—</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;">Отход</div>
+          <div style="font-size:28px;font-weight:800;color:var(--red);" id="n-r-waste">—</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;">Общая площадь</div>
+          <div style="font-size:20px;font-weight:700;" id="n-r-area">—</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;">Общий вес</div>
+          <div style="font-size:20px;font-weight:700;" id="n-r-weight">—</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;">Стоимость материала</div>
+          <div style="font-size:20px;font-weight:700;color:var(--orange);" id="n-r-cost">—</div>
+        </div>
+      </div>
+
+      <!-- Таблица листов -->
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Раскладка по листам:</div>
+      <div id="n-r-sheets-table"></div>
+
+      <!-- Визуальный раскрой -->
+      <div style="font-weight:700;font-size:13px;margin:16px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">Визуальная карта раскроя:</div>
+      <div id="n-r-visual" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /tab-nesting -->
+
 <script>
 // ═══════════════════════════════════════════
 // СПРАВОЧНИКИ
@@ -1300,6 +1456,7 @@ function switchTab(tab) {
   event.target.classList.add('active');
   document.getElementById('tab-cassette').classList.toggle('hidden', tab !== 'cassette');
   document.getElementById('tab-mk').classList.toggle('hidden', tab !== 'mk');
+  document.getElementById('tab-nesting').classList.toggle('hidden', tab !== 'nesting');
 }
 
 // ═══════════════════════════════════════════
@@ -1746,6 +1903,307 @@ function fmt(n) {
 }
 function fmtR(n) {
   return Math.round(n).toLocaleString('ru-RU') + ' ₽';
+}
+
+// ═══════════════════════════════════════════
+// РАСКРОЙ — СПЕЦИФИКАЦИЯ
+// ═══════════════════════════════════════════
+function nestAddRow() {
+  const body = document.getElementById('n-spec-body');
+  const num = body.children.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="padding:4px 8px;color:var(--text-light)">${num}</td>
+    <td><input type="text" value="Изделие ${num}" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+    <td><input type="number" value="500" min="10" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+    <td><input type="number" value="500" min="10" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+    <td><input type="number" value="10" min="1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;"></td>
+    <td><button onclick="nestDelRow(this)" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">✕</button></td>
+  `;
+  body.appendChild(tr);
+}
+function nestDelRow(btn) {
+  const body = document.getElementById('n-spec-body');
+  if (body.children.length > 1) {
+    btn.closest('tr').remove();
+    // перенумеровать
+    [...body.children].forEach((tr, i) => { tr.cells[0].textContent = i + 1; });
+  }
+}
+function nestUpdatePrice() {
+  const mat = MATERIALS[document.getElementById('n_material').value];
+  if (mat) document.getElementById('n_price').value = mat.price;
+}
+
+// ═══════════════════════════════════════════
+// РАСКРОЙ — АЛГОРИТМ
+// ═══════════════════════════════════════════
+function nestCalc() {
+  // Собираем спецификацию
+  const body = document.getElementById('n-spec-body');
+  const rows = [...body.children];
+  const parts = [];
+  rows.forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    const name = inputs[0].value || 'Без имени';
+    const w = parseInt(inputs[1].value) || 0;
+    const l = parseInt(inputs[2].value) || 0;
+    const qty = parseInt(inputs[3].value) || 0;
+    if (w > 0 && l > 0 && qty > 0) {
+      for (let i = 0; i < qty; i++) {
+        parts.push({ name, w, l, idx: parts.length });
+      }
+    }
+  });
+  if (parts.length === 0) return;
+
+  const sheetW  = parseInt(document.getElementById('n_sheet_w').value) || 1250;
+  const sheetMin = parseInt(document.getElementById('n_sheet_min').value) || 2000;
+  const sheetMax = parseInt(document.getElementById('n_sheet_max').value) || 6000;
+  const step    = parseInt(document.getElementById('n_step').value) || 100;
+  const gap     = parseInt(document.getElementById('n_gap').value) || 5;
+  const margin  = parseInt(document.getElementById('n_margin').value) || 10;
+  const thick   = parseFloat(document.getElementById('n_thick').value) || 2;
+  const priceKg = parseFloat(document.getElementById('n_price').value) || 0;
+  const mat     = MATERIALS[document.getElementById('n_material').value];
+  const density = mat ? mat.density : 7.85;
+
+  const usableW = sheetW - 2 * margin;
+
+  // Цвета для визуализации
+  const COLORS = [
+    '#3498db','#e67e22','#2ecc71','#9b59b6','#e74c3c',
+    '#1abc9c','#f39c12','#8e44ad','#16a085','#d35400',
+    '#2980b9','#c0392b','#27ae60','#7f8c8d','#2c3e50'
+  ];
+
+  // Сортируем детали по длине (большие сначала) для лучшего раскроя
+  parts.sort((a, b) => {
+    const aMax = Math.max(a.w, a.l);
+    const bMax = Math.max(b.w, b.l);
+    return bMax - aMax || Math.min(b.w, b.l) - Math.min(a.w, a.l);
+  });
+
+  // Для каждой детали определяем ориентации
+  // Деталь помещается на лист шириной usableW, ориентация может быть w×l или l×w
+  function fitOrient(part) {
+    const opts = [];
+    if (part.w <= usableW) opts.push({ pw: part.w, pl: part.l, rotated: false });
+    if (part.l <= usableW && part.l !== part.w) opts.push({ pw: part.l, pl: part.w, rotated: true });
+    // Если ни одна ориентация не помещается по ширине — деталь не влезает
+    return opts;
+  }
+
+  // Полосовой раскрой (strip-based)
+  // Каждый лист: полосы по высоте, в каждой полосе — детали в ряд по ширине
+  const sheets = []; // { len, strips: [{ y, h, items: [{x,y,pw,pl,part}] }] }
+  const placed = new Set();
+
+  // Greedy: для каждой неразмещённой детали ищем место на существующих листах,
+  // если нет — создаём новый лист оптимальной длины
+  function addToSheet(sheet, part) {
+    const orients = fitOrient(part);
+    if (orients.length === 0) return false;
+
+    for (const { pw, pl, rotated } of orients) {
+      // Пробуем вставить в существующую полосу
+      for (const strip of sheet.strips) {
+        if (Math.abs(strip.h - pl) > 1) continue; // полоса другой высоты
+        const lastX = strip.items.length > 0 
+          ? strip.items[strip.items.length - 1].x + strip.items[strip.items.length - 1].pw + gap
+          : margin;
+        if (lastX + pw <= sheetW - margin) {
+          strip.items.push({ x: lastX, y: strip.y, pw, pl, part, rotated });
+          return true;
+        }
+      }
+      // Новая полоса
+      const lastStrip = sheet.strips[sheet.strips.length - 1];
+      const newY = lastStrip 
+        ? lastStrip.y + lastStrip.h + gap 
+        : margin;
+      if (newY + pl <= sheet.len - margin) {
+        sheet.strips.push({ y: newY, h: pl, items: [{ x: margin, y: newY, pw, pl, part, rotated }] });
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Основной алгоритм
+  for (const part of parts) {
+    if (placed.has(part.idx)) continue;
+
+    let added = false;
+    // Пробуем разместить на существующих листах
+    for (const sheet of sheets) {
+      if (addToSheet(sheet, part)) {
+        placed.add(part.idx);
+        added = true;
+        break;
+      }
+    }
+    if (added) continue;
+
+    // Создаём новый лист — подбираем оптимальную длину
+    const orients = fitOrient(part);
+    if (orients.length === 0) continue; // деталь не помещается вообще
+
+    const minPartLen = Math.min(...orients.map(o => o.pl));
+    const needLen = minPartLen + 2 * margin;
+    let bestLen = Math.ceil(needLen / step) * step;
+    if (bestLen < sheetMin) bestLen = sheetMin;
+    if (bestLen > sheetMax) bestLen = sheetMax;
+
+    const newSheet = { len: bestLen, strips: [] };
+    if (addToSheet(newSheet, part)) {
+      sheets.push(newSheet);
+      placed.add(part.idx);
+    }
+  }
+
+  // Оптимизация: пробуем впихнуть ещё неразмещённые детали
+  // (повторный проход для оставшихся)
+  for (const part of parts) {
+    if (placed.has(part.idx)) continue;
+    for (const sheet of sheets) {
+      if (addToSheet(sheet, part)) {
+        placed.add(part.idx);
+        break;
+      }
+    }
+  }
+
+  // Оптимизация длины листов — обрезаем до фактически использованной + margin, кратно step
+  for (const sheet of sheets) {
+    let maxUsed = 0;
+    for (const strip of sheet.strips) {
+      const stripEnd = strip.y + strip.h;
+      if (stripEnd > maxUsed) maxUsed = stripEnd;
+    }
+    const needed = maxUsed + margin;
+    let optLen = Math.ceil(needed / step) * step;
+    if (optLen < sheetMin) optLen = sheetMin;
+    sheet.len = optLen;
+  }
+
+  // Подсчёт результатов
+  let totalSheetArea = 0;
+  let totalPartArea = 0;
+  let totalParts = 0;
+
+  sheets.forEach(sheet => {
+    totalSheetArea += sheetW * sheet.len;
+    sheet.strips.forEach(strip => {
+      strip.items.forEach(item => {
+        totalPartArea += item.pw * item.pl;
+        totalParts++;
+      });
+    });
+  });
+
+  const kim = totalSheetArea > 0 ? (totalPartArea / totalSheetArea * 100) : 0;
+  const wasteArea = totalSheetArea - totalPartArea;
+  const wastePct = totalSheetArea > 0 ? (wasteArea / totalSheetArea * 100) : 0;
+  const totalAreaM2 = totalSheetArea / 1e6;
+  const weightPerM2 = density * thick; // кг/м²
+  const totalWeight = totalAreaM2 * weightPerM2;
+  const totalCost = totalWeight * priceKg;
+
+  // Не размещённые детали
+  const unplaced = parts.filter(p => !placed.has(p.idx));
+
+  // --- ВЫВОД ---
+  document.getElementById('n-results').style.display = '';
+  document.getElementById('n-r-kim').textContent = kim.toFixed(1) + '%';
+  document.getElementById('n-r-sheets').textContent = sheets.length;
+  document.getElementById('n-r-waste').textContent = wastePct.toFixed(1) + '%';
+  document.getElementById('n-r-area').textContent = totalAreaM2.toFixed(2) + ' м²';
+  document.getElementById('n-r-weight').textContent = totalWeight.toFixed(1) + ' кг';
+  document.getElementById('n-r-cost').textContent = Math.round(totalCost).toLocaleString('ru-RU') + ' ₽';
+
+  // Таблица листов
+  let tblHtml = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  tblHtml += '<tr style="background:var(--bg);font-weight:600;font-size:11px;"><td style="padding:5px 8px">Лист</td><td>Размер (мм)</td><td>Деталей</td><td>КИМ</td><td>Площадь листа</td></tr>';
+  sheets.forEach((sheet, si) => {
+    let sPartArea = 0, sPartCount = 0;
+    sheet.strips.forEach(s => s.items.forEach(it => { sPartArea += it.pw * it.pl; sPartCount++; }));
+    const sArea = sheetW * sheet.len;
+    const sKim = sArea > 0 ? (sPartArea / sArea * 100).toFixed(1) : '0';
+    const bg = si % 2 === 0 ? '#fff' : 'var(--bg)';
+    tblHtml += `<tr style="background:${bg}"><td style="padding:5px 8px">#${si+1}</td><td>${sheetW} × ${sheet.len}</td><td>${sPartCount} шт</td><td style="font-weight:600;color:var(--green)">${sKim}%</td><td>${(sArea/1e6).toFixed(3)} м²</td></tr>`;
+  });
+  tblHtml += '</table>';
+  if (unplaced.length > 0) {
+    tblHtml += `<div style="color:var(--red);font-weight:600;margin-top:8px;">⚠ Не удалось разместить ${unplaced.length} деталей (превышают ширину листа)</div>`;
+  }
+  document.getElementById('n-r-sheets-table').innerHTML = tblHtml;
+
+  // Визуальный раскрой (canvas для каждого листа)
+  const visualDiv = document.getElementById('n-r-visual');
+  visualDiv.innerHTML = '';
+  const maxVisW = 800; // макс ширина визуализации px
+
+  sheets.forEach((sheet, si) => {
+    const scale = Math.min(maxVisW / sheetW, 400 / sheet.len, 0.5);
+    const cw = Math.round(sheetW * scale);
+    const ch = Math.round(sheet.len * scale);
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:16px;display:inline-block;vertical-align:top;margin-right:12px;';
+
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:11px;font-weight:600;margin-bottom:4px;';
+    label.textContent = `Лист #${si+1} — ${sheetW}×${sheet.len} мм`;
+    wrap.appendChild(label);
+
+    const cvs = document.createElement('canvas');
+    cvs.width = cw; cvs.height = ch;
+    cvs.style.cssText = 'border:2px solid var(--blue);border-radius:4px;background:#f8f8f8;';
+    wrap.appendChild(cvs);
+    visualDiv.appendChild(wrap);
+
+    const ctx = cvs.getContext('2d');
+
+    // Рисуем детали
+    let colorIdx = 0;
+    sheet.strips.forEach(strip => {
+      strip.items.forEach(item => {
+        const x = item.x * scale;
+        const y = item.y * scale;
+        const w = item.pw * scale;
+        const h = item.pl * scale;
+
+        // Цвет по имени детали
+        let ci = 0;
+        for (let c = 0; c < item.part.name.length; c++) ci += item.part.name.charCodeAt(c);
+        const color = COLORS[ci % COLORS.length];
+
+        ctx.fillStyle = color + '40'; // прозрачный
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, w, h);
+
+        // Текст
+        if (w > 30 && h > 12) {
+          ctx.fillStyle = '#333';
+          ctx.font = `${Math.max(7, Math.min(10, w/8))}px sans-serif`;
+          ctx.fillText(item.part.name.substring(0, 12), x + 2, y + h/2 + 3);
+          ctx.font = '7px sans-serif';
+          ctx.fillStyle = '#888';
+          ctx.fillText(`${item.part.w}×${item.part.l}`, x + 2, y + h - 3);
+        }
+      });
+    });
+
+    // Линии полей
+    ctx.setLineDash([3,3]);
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(margin*scale, margin*scale, (sheetW-2*margin)*scale, (sheet.len-2*margin)*scale);
+    ctx.setLineDash([]);
+  });
 }
 
 // ═══════════════════════════════════════════
