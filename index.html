@@ -771,9 +771,21 @@
       </div>
     </div>
 
-    <!-- ШАГ 5: Работы -->
+    <!-- ШАГ 5: КИТ -->
     <div class="card">
-      <div class="card-header"><div class="step-num">5</div><h3>Стоимость работ</h3></div>
+      <div class="card-header"><div class="step-num">5</div><h3>КИТ — Конструкторская и технологическая разработка</h3></div>
+      <div class="card-body">
+        <div class="info-box">Привязана к <strong>продаваемой единице</strong> (1 м² по выбранной единице измерения).</div>
+        <div class="field-wrap">
+          <label>КИТ (руб/м²)</label>
+          <input type="number" id="c_kit" value="0" min="0" step="1" placeholder="Введите стоимость" oninput="calcCassette()">
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 6: Работы -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">6</div><h3>Стоимость работ</h3></div>
       <div class="card-body">
         <div class="field-row">
           <div>
@@ -861,6 +873,12 @@
         <div class="result-section-subtotal mat">
           <span>Итого материалы:</span>
           <span id="r-c-mat-total">—</span>
+        </div>
+
+        <!-- БЛОК: КИТ -->
+        <div class="result-row" id="r-c-kit-row">
+          <span class="result-label">📐 КИТ (конструкт. разработка)</span>
+          <span class="result-value" id="r-c-kit-cost">—</span>
         </div>
 
         <!-- БЛОК: РАБОТЫ -->
@@ -1115,9 +1133,21 @@
       </div>
     </div>
 
-    <!-- ШАГ 4: Работы -->
+    <!-- ШАГ 4: КИТ -->
     <div class="card">
-      <div class="card-header"><div class="step-num">4</div><h3>Стоимость работ</h3></div>
+      <div class="card-header"><div class="step-num">4</div><h3>КИТ — Конструкторская и технологическая разработка</h3></div>
+      <div class="card-body">
+        <div class="info-box">Привязана к <strong>продаваемой единице</strong> (1 кг готового изделия).</div>
+        <div class="field-wrap">
+          <label>КИТ (руб/кг)</label>
+          <input type="number" id="m_kit" value="0" min="0" step="1" placeholder="Введите стоимость" oninput="calcMK()">
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 5: Работы -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">5</div><h3>Стоимость работ</h3></div>
       <div class="card-body">
         <div class="field-wrap">
           <label>Сварка (руб/кг изделия)</label>
@@ -1202,6 +1232,12 @@
         <div class="result-section-subtotal mat">
           <span>Итого материалы:</span>
           <span id="r-m-mat-group-total">—</span>
+        </div>
+
+        <!-- БЛОК: КИТ МК -->
+        <div class="result-row" id="r-m-kit-row">
+          <span class="result-label">📐 КИТ (конструкт. разработка)</span>
+          <span class="result-value" id="r-m-kit-cost">—</span>
         </div>
 
         <!-- БЛОК: РАБОТЫ МК -->
@@ -1611,11 +1647,14 @@ function calcCassette() {
 
   // --- ГРУППИРОВКА ---
   // Материалы: металл + покрытие(материал) + упаковка + доставка
+  // КИТ — привязана к продаваемой единице (1 м²)
+  const kitCost = parseFloat(document.getElementById('c_kit').value) || 0;
+
   const groupMat  = matCost + coverMatCost + packCost + delCost;
   // Работы: работы покраски + мех + вальцовка + рёбра + перфорация
   const groupWork = coverWorkCost + mechCost + rollCost + ribCost + perfCost;
 
-  const total = groupMat + groupWork;
+  const total = groupMat + groupWork + kitCost;
   const markup = parseFloat(document.getElementById('c_markup').value) || 0;
   const finalPrice = total * (1 + markup/100);
 
@@ -1649,6 +1688,9 @@ function calcCassette() {
   document.getElementById('r-c-del-cost').textContent   = delCost  > 0 ? fmtR(delCost)  : '—';
   document.getElementById('r-c-mat-total').textContent  = fmtR(groupMat);
   document.getElementById('r-c-mat-pct').textContent    = matPct + '%';
+
+  // КИТ
+  document.getElementById('r-c-kit-cost').textContent = kitCost > 0 ? fmtR(kitCost) : '—';
 
   // Работы покраски
   const pwWorkRow = document.getElementById('r-c-powder-work-row');
@@ -1825,11 +1867,14 @@ function calcMK() {
 
   // --- ГРУППИРОВКА ---
   // Материалы: металл + покрытие(материал) + упаковка + доставка
+  // КИТ — привязана к продаваемой единице (1 кг)
+  const mKitCost = parseFloat(document.getElementById('m_kit').value) || 0;
+
   const mGroupMat  = matCost + mCoverMatCost + packCost + delCost;
   // Работы: работы покраски + сварка + перфорация
   const mGroupWork = mCoverWorkCost + weldCost + perfCost;
 
-  const total = mGroupMat + mGroupWork;
+  const total = mGroupMat + mGroupWork + mKitCost;
   const markup = parseFloat(document.getElementById('m_markup').value) || 0;
   const finalPrice = total * (1 + markup/100);
 
@@ -1863,6 +1908,9 @@ function calcMK() {
   document.getElementById('r-m-del-cost').textContent  = delCost  > 0 ? fmtR(delCost)  : '—';
   document.getElementById('r-m-mat-group-total').textContent = fmtR(mGroupMat);
   document.getElementById('r-m-mat-pct').textContent   = mMatPct + '%';
+
+  // КИТ
+  document.getElementById('r-m-kit-cost').textContent = mKitCost > 0 ? fmtR(mKitCost) : '—';
 
   // Работы покраски
   const mPwWorkRow = document.getElementById('r-m-powder-work-row');
