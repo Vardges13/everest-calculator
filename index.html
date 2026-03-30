@@ -2024,65 +2024,123 @@ function nestCalc() {
   function buildRow(avail) {
     if (avail.length === 0) return null;
 
-    // Собираем все уникальные размеры pw для доступных деталей
-    // и пробуем лучшую комбинацию заполнения ширины
+    // === СТРАТЕГИЯ: пробуем ВСЕ комбинации пар ориентаций и выбираем лучшую ===
+    // Для каждой пары типов деталей считаем, сколько влезет по ширине и высоте
+    // Выбираем комбинацию с максимальным заполнением площади строки
 
-    // Берём первую неразмещённую деталь (самую большую по площади)
-    let bestFirst = null, bestFirstOrient = null;
-    let bestArea = 0;
-    for (let i = 0; i < avail.length; i++) {
-      if (placed.has(avail[i].id)) continue;
-      const orients = orientations(avail[i]);
-      for (const o of orients) {
-        const area = o.pw * o.pl;
-        if (area > bestArea) {
-          bestArea = area;
-          bestFirst = avail[i];
-          bestFirstOrient = o;
-        }
-      }
+    // Собираем уникальные типы (по размерам) с подсчётом доступных
+    const types = {};
+    for (const p of avail) {
+      if (placed.has(p.id)) continue;
+      const key = p.w + 'x' + p.l;
+      if (!types[key]) types[key] = { w: p.w, l: p.l, parts: [] };
+      types[key].parts.push(p);
     }
-    if (!bestFirst) return null;
+    const typeList = Object.values(types).filter(t => t.parts.length > 0);
+    if (typeList.length === 0) return null;
 
-    const row = { h: bestFirstOrient.pl, items: [], totalW: 0 };
-    row.items.push({ pw: bestFirstOrient.pw, pl: bestFirstOrient.pl, part: bestFirst });
-    row.totalW = bestFirstOrient.pw;
-    placed.add(bestFirst.id);
+    let bestRow = null, bestRowFill = 0;
 
-    // Добиваем ширину: ищем детали которые лучше всего заполняют остаток
-    let changed = true;
-    while (changed) {
-      changed = false;
-      const remainW = usableW - row.totalW - gap;
-      if (remainW < 30) break;
+    // Пробуем каждый тип как «колонку» строки
+    for (const tA of typeList) {
+      const orientsA = orientations(tA.parts[0]);
+      for (const oA of orientsA) {
+        // Колонка A: сколько штук tA влезает по высоте строки стопкой
+        // Строка начинается с одной колонки шириной oA.pw
+        // Высота колонки = N * oA.pl + (N-1) * gap
+        // Пробуем разное количество в стопке (1..maxStack)
+        const maxStackA = Math.min(tA.parts.length, Math.floor((sheetMax - 2*margin) / (oA.pl + gap)));
 
-      let bestFill = null, bestFillOrient = null, bestFillScore = -1;
+        for (let nA = 1; nA <= Math.min(maxStackA, 10); nA++) {
+          const colAH = nA * oA.pl + (nA - 1) * gap;
+          const colAW = oA.pw;
+          const areaA = nA * oA.pw * oA.pl;
 
-      for (let i = 0; i < avail.length; i++) {
-        if (placed.has(avail[i].id)) continue;
-        const orients = orientations(avail[i]);
-        for (const o of orients) {
-          if (o.pw > remainW) continue;
-          // Допускаем деталь любой высоты — строка расширится
-          // Но предпочитаем детали близкие по высоте строки
-          const fillPct = o.pw / remainW; // чем ближе к 1 — тем лучше
-          const heightPenalty = o.pl > row.h ? (o.pl - row.h) / row.h * 0.3 : 0;
-          const score = fillPct - heightPenalty;
-          if (score > bestFillScore) {
-            bestFillScore = score;
-            bestFill = avail[i];
-            bestFillOrient = o;
+          // Пробуем добавить колонку B (другой или такой же тип)
+          // Остаток ширины
+          const remainW = usableW - colAW - gap;
+
+          // Вариант без B — только A
+          const fillOnlyA = areaA / (usableW * colAH);
+          if (fillOnlyA > bestRowFill || !bestRow) {
+            bestRowFill = fillOnlyA;
+            bestRow = { cols: [{ orient: oA, count: nA, type: tA, h: colAH }], h: colAH };
+          }
+
+          if (remainW < 30) continue;
+
+          for (const tB of typeList) {
+            const orientsB = orientations(tB.parts[0]);
+            for (const oB of orientsB) {
+              if (oB.pw > remainW) continue;
+
+              // Сколько B можно сложить в высоту colAH
+              const maxB = (tA === tB) ? tB.parts.length - nA : tB.parts.length;
+              const fitB = Math.min(maxB, Math.floor((colAH + gap) / (oB.pl + gap)));
+              if (fitB <= 0) continue;
+
+              const colBH = fitB * oB.pl + (fitB - 1) * gap;
+              const areaB = fitB * oB.pw * oB.pl;
+              const totalArea = areaA + areaB;
+              const rowH = Math.max(colAH, colBH);
+              const fill = totalArea / (usableW * rowH);
+
+              // Можно ли добавить третью колонку C?
+              const remainW2 = remainW - oB.pw - gap;
+              let extraArea = 0, extraCol = null;
+              if (remainW2 >= 30) {
+                for (const tC of typeList) {
+                  const orientsC = orientations(tC.parts[0]);
+                  for (const oC of orientsC) {
+                    if (oC.pw > remainW2) continue;
+                    let maxC = tC.parts.length;
+                    if (tC === tA) maxC -= nA;
+                    if (tC === tB) maxC -= fitB;
+                    const fitC = Math.min(maxC, Math.floor((rowH + gap) / (oC.pl + gap)));
+                    if (fitC <= 0) continue;
+                    const aC = fitC * oC.pw * oC.pl;
+                    if (aC > extraArea) {
+                      extraArea = aC;
+                      extraCol = { orient: oC, count: fitC, type: tC, h: fitC * oC.pl + (fitC-1)*gap };
+                    }
+                  }
+                }
+              }
+
+              const totalFill = (totalArea + extraArea) / (usableW * rowH);
+              if (totalFill > bestRowFill) {
+                bestRowFill = totalFill;
+                const cols = [
+                  { orient: oA, count: nA, type: tA, h: colAH },
+                  { orient: oB, count: fitB, type: tB, h: colBH }
+                ];
+                if (extraCol) cols.push(extraCol);
+                bestRow = { cols, h: Math.max(colAH, colBH, extraCol ? extraCol.h : 0) };
+              }
+            }
           }
         }
       }
+    }
 
-      if (bestFill) {
-        row.items.push({ pw: bestFillOrient.pw, pl: bestFillOrient.pl, part: bestFill });
-        row.totalW += gap + bestFillOrient.pw;
-        if (bestFillOrient.pl > row.h) row.h = bestFillOrient.pl;
-        placed.add(bestFill.id);
-        changed = true;
+    if (!bestRow) return null;
+
+    // Собираем строку из выбранных колонок
+    const row = { h: bestRow.h, items: [], totalW: 0 };
+    let x = margin;
+    for (const col of bestRow.cols) {
+      let y = 0; // relative to row start
+      let placed_count = 0;
+      for (const p of col.type.parts) {
+        if (placed.has(p.id)) continue;
+        if (placed_count >= col.count) break;
+        row.items.push({ pw: col.orient.pw, pl: col.orient.pl, part: p, relX: x, relY: y });
+        placed.add(p.id);
+        y += col.orient.pl + gap;
+        placed_count++;
       }
+      x += col.orient.pw + gap;
+      row.totalW = x - margin - gap;
     }
     return row;
   }
@@ -2111,11 +2169,11 @@ function nestCalc() {
       }
 
       // Размещаем строку
-      let x = margin;
       const shelf = { y: curY, h: row.h, items: [] };
       for (const item of row.items) {
-        shelf.items.push({ x, y: curY, pw: item.pw, pl: item.pl, part: item.part });
-        x += item.pw + gap;
+        const ix = item.relX !== undefined ? item.relX : margin;
+        const iy = curY + (item.relY || 0);
+        shelf.items.push({ x: ix, y: iy, pw: item.pw, pl: item.pl, part: item.part });
       }
       sheet.shelves.push(shelf);
       curY += row.h + gap;
