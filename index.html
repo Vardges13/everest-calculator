@@ -1514,7 +1514,7 @@
           <input class="field-val" type="number" id="f-al-price" value="320" min="0" oninput="calcFencing()">
         </div>
         <div class="field-row">
-          <label class="field-label" style="color:var(--text-light);font-size:12px;">Рама: 2× труба 57×3 (2300мм) + 2× труба 40×20×2 (550мм)</label>
+          <label class="field-label" style="color:var(--text-light);font-size:12px;">Рама: 2× труба 51×3 (2300мм) + 2× труба 40×20×2 (550мм)</label>
         </div>
       </div>
     </div>
@@ -2587,8 +2587,8 @@ function calcFencing() {
   const markup     = parseFloat(document.getElementById('f-markup').value) || 0;
 
   // --- Вес рамы на 1 секцию ---
-  // Стойка: труба 57x3, площадь сечения = π/4*(57²-51²) мм²
-  const dOut = 57, dIn = 51;
+  // Стойка: труба 51x3, площадь сечения = π/4*(51²-45²) мм²
+  const dOut = 51, dIn = 45;
   const sectionPipe = Math.PI / 4 * (dOut*dOut - dIn*dIn); // мм²
   const stakeLen = height; // мм
   const stakeWeight = sectionPipe * stakeLen * 7.85e-9 * 2; // кг, 2 стойки
@@ -2606,7 +2606,7 @@ function calcFencing() {
   // --- Площади ---
   const sheetArea = (width * height) / 1e6; // м²
   // Площадь рамы (периметр трубы 57 * высота * 2 стойки + прямоугольная труба 40x20 * ширина * 2)
-  const framePerim57 = Math.PI * dOut / 1000; // м, длина окружности трубы 57
+  const framePerim57 = Math.PI * dOut / 1000; // м, длина окружности трубы 51
   const frameArea57 = framePerim57 * stakeLen / 1000 * 2; // м²
   const framePerim40 = 2 * (40 + 20) / 1000; // м, периметр прямоуг. трубы 40x20
   const frameArea40 = framePerim40 * horizLen / 1000 * 2; // м²
