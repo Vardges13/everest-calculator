@@ -543,6 +543,7 @@
   <button class="tab-btn active" onclick="switchTab('cassette')">🔲 Кассеты</button>
   <button class="tab-btn" onclick="switchTab('mk')">🔩 Металлоконструкции</button>
   <button class="tab-btn" onclick="switchTab('nesting')">✂️ Раскрой</button>
+  <button class="tab-btn" onclick="switchTab('fencing')">🛡️ Ограждения КГХ</button>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -1452,6 +1453,200 @@
 </div>
 </div><!-- /tab-nesting -->
 
+<!-- ═══════════════════════════════════════════
+     TAB: ОГРАЖДЕНИЯ КГХ
+════════════════════════════════════════════ -->
+<div id="tab-fencing" class="hidden">
+<div class="main">
+  <div class="left-col">
+
+    <!-- ШАГ 1: Параметры секции -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">1</div><h3>Параметры секции</h3></div>
+      <div class="card-body">
+        <div class="field-row">
+          <label class="field-label">Количество секций, шт</label>
+          <input class="field-val" type="number" id="f-qty" value="1" min="1" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Ширина листа, мм</label>
+          <input class="field-val" type="number" id="f-width" value="550" min="100" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Высота, мм</label>
+          <input class="field-val" type="number" id="f-height" value="2300" min="100" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Толщина листа, мм</label>
+          <input class="field-val" type="number" id="f-thick" value="2" min="0.5" step="0.5" oninput="calcFencing()">
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 2: Перфорация -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">2</div><h3>Перфорация листа</h3></div>
+      <div class="card-body">
+        <div class="field-row">
+          <label class="field-label">Кол-во отверстий на лист</label>
+          <input class="field-val" type="number" id="f-holes" value="1368" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Цена пробивки, руб/отв</label>
+          <input class="field-val" type="number" id="f-hole-price" value="0.35" min="0" step="0.01" oninput="calcFencing()">
+        </div>
+        <div class="field-row" style="background:#f5f7fa;border-radius:6px;padding:8px 10px;margin-top:4px;">
+          <label class="field-label" style="color:var(--text-light);font-size:12px;">Шаг отверстий: ~30мм × ~30мм<br>Из рулона 1250×2300 → 2 заготовки 550×2300</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 3: Стоимость материала рамы -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">3</div><h3>Материал рамы</h3></div>
+      <div class="card-body">
+        <div class="field-row">
+          <label class="field-label">Цена стали рамы, руб/кг</label>
+          <input class="field-val" type="number" id="f-steel-price" value="90" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Цена алюм. листа, руб/кг</label>
+          <input class="field-val" type="number" id="f-al-price" value="320" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label" style="color:var(--text-light);font-size:12px;">Рама: 2× труба 57×3 (2300мм) + 2× труба 40×20×2 (550мм)</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 4: Стоимость работ -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">4</div><h3>Стоимость работ</h3></div>
+      <div class="card-body">
+        <div class="field-row">
+          <label class="field-label">Сварка, руб/кг</label>
+          <input class="field-val" type="number" id="f-weld" value="50" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Покраска рамы, руб/м²</label>
+          <input class="field-val" type="number" id="f-paint-frame" value="420" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Покраска листа (2 стороны), руб/м²</label>
+          <input class="field-val" type="number" id="f-paint-sheet" value="350" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Лазерная резка, руб/компл</label>
+          <input class="field-val" type="number" id="f-laser" value="500" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Наклейки, руб/компл</label>
+          <input class="field-val" type="number" id="f-stickers" value="300" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Сборка, руб/кг</label>
+          <input class="field-val" type="number" id="f-assembly" value="7" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Опорный блок, руб/шт (2 на секцию)</label>
+          <input class="field-val" type="number" id="f-anchor" value="350" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Упаковка, руб/компл</label>
+          <input class="field-val" type="number" id="f-pack" value="50" min="0" oninput="calcFencing()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Доставка, руб (весь заказ)</label>
+          <input class="field-val" type="number" id="f-delivery" value="170" min="0" oninput="calcFencing()">
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 5: Наценка -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">5</div><h3>Наценка</h3></div>
+      <div class="card-body">
+        <div class="field-row">
+          <label class="field-label">Наценка, %</label>
+          <input class="field-val" type="number" id="f-markup" value="30" min="0" oninput="calcFencing()">
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left-col -->
+
+  <div class="right-col">
+    <div class="card" style="position:sticky;top:16px;">
+      <div class="card-header" style="background:var(--blue);color:#fff;border-radius:10px 10px 0 0;padding:14px 18px;">
+        <h3 style="color:#fff;font-size:16px;">🛡️ Расчёт ограждения КГХ</h3>
+      </div>
+      <div class="card-body" style="padding:16px;">
+
+        <!-- Параметры -->
+        <div style="background:#f5f7fa;border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="color:var(--text-light);">Секций:</span>
+            <span id="r-f-qty" style="font-weight:600;">1 шт</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="color:var(--text-light);">Размер листа:</span>
+            <span id="r-f-size" style="font-weight:600;">550×2300 мм</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="color:var(--text-light);">Вес рамы (1 секция):</span>
+            <span id="r-f-frame-kg" style="font-weight:600;">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-light);">Вес листа (1 секция):</span>
+            <span id="r-f-sheet-kg" style="font-weight:600;">—</span>
+          </div>
+        </div>
+
+        <!-- Себестоимость 1 секции -->
+        <div style="font-size:13px;font-weight:600;color:var(--text-light);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Себестоимость 1 секции</div>
+        <div class="r-row"><span class="r-label">Материал рамы</span><span class="r-val" id="r-f-mat-frame">—</span></div>
+        <div class="r-row"><span class="r-label">Материал листа</span><span class="r-val" id="r-f-mat-sheet">—</span></div>
+        <div class="r-row"><span class="r-label">Перфорация</span><span class="r-val" id="r-f-perforation">—</span></div>
+        <div class="r-row"><span class="r-label">Сварка</span><span class="r-val" id="r-f-welding">—</span></div>
+        <div class="r-row"><span class="r-label">Покраска рамы</span><span class="r-val" id="r-f-paint-f">—</span></div>
+        <div class="r-row"><span class="r-label">Покраска листа</span><span class="r-val" id="r-f-paint-s">—</span></div>
+        <div class="r-row"><span class="r-label">Лазерная резка</span><span class="r-val" id="r-f-laser">—</span></div>
+        <div class="r-row"><span class="r-label">Наклейки</span><span class="r-val" id="r-f-stickers">—</span></div>
+        <div class="r-row"><span class="r-label">Сборка</span><span class="r-val" id="r-f-assembly">—</span></div>
+        <div class="r-row"><span class="r-label">Опорные блоки (2 шт)</span><span class="r-val" id="r-f-anchor">—</span></div>
+        <div class="r-row"><span class="r-label">Упаковка</span><span class="r-val" id="r-f-pack">—</span></div>
+        <div class="r-row" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px;">
+          <span class="r-label" style="font-weight:600;">Итого 1 секция</span>
+          <span class="r-val" id="r-f-one" style="font-weight:600;color:var(--blue);">—</span>
+        </div>
+
+        <!-- Весь заказ -->
+        <div style="font-size:13px;font-weight:600;color:var(--text-light);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px;">Весь заказ</div>
+        <div class="r-row"><span class="r-label">Все секции</span><span class="r-val" id="r-f-all-sec">—</span></div>
+        <div class="r-row"><span class="r-label">Доставка</span><span class="r-val" id="r-f-delivery">—</span></div>
+        <div class="r-row" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px;">
+          <span class="r-label" style="font-weight:600;">Себестоимость</span>
+          <span class="r-val" id="r-f-cost" style="font-weight:600;color:var(--blue);">—</span>
+        </div>
+        <div class="r-row" style="margin-top:4px;">
+          <span class="r-label" style="color:var(--text-light);">Наценка</span>
+          <span class="r-val" id="r-f-markup-val" style="color:var(--text-light);">—</span>
+        </div>
+
+        <!-- Цена продажи -->
+        <div style="background:var(--green-bg);border:2px solid var(--green);border-radius:8px;padding:14px;margin-top:12px;text-align:center;">
+          <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:4px;">ЦЕНА ПРОДАЖИ</div>
+          <div id="r-f-price-big" style="font-size:28px;font-weight:700;color:var(--green);">—</div>
+          <div id="r-f-price-per" style="font-size:12px;color:var(--text-light);margin-top:4px;">за весь заказ</div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /right-col -->
+
+</div><!-- /main -->
+</div><!-- /tab-fencing -->
+
 <script>
 // ═══════════════════════════════════════════
 // СПРАВОЧНИКИ
@@ -1490,6 +1685,7 @@ function switchTab(tab) {
   document.getElementById('tab-cassette').classList.toggle('hidden', tab !== 'cassette');
   document.getElementById('tab-mk').classList.toggle('hidden', tab !== 'mk');
   document.getElementById('tab-nesting').classList.toggle('hidden', tab !== 'nesting');
+  document.getElementById('tab-fencing').classList.toggle('hidden', tab !== 'fencing');
 }
 
 // ═══════════════════════════════════════════
@@ -2367,12 +2563,113 @@ function nestCalc() {
 // ═══════════════════════════════════════════
 // ИНИЦИАЛИЗАЦИЯ
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// ОГРАЖДЕНИЯ КГХ
+// ═══════════════════════════════════════════
+function calcFencing() {
+  const qty        = parseFloat(document.getElementById('f-qty').value) || 1;
+  const width      = parseFloat(document.getElementById('f-width').value) || 550;   // мм
+  const height     = parseFloat(document.getElementById('f-height').value) || 2300; // мм
+  const thick      = parseFloat(document.getElementById('f-thick').value) || 2;     // мм
+  const holes      = parseFloat(document.getElementById('f-holes').value) || 0;
+  const holePrice  = parseFloat(document.getElementById('f-hole-price').value) || 0.35;
+  const steelPrice = parseFloat(document.getElementById('f-steel-price').value) || 90;
+  const alPrice    = parseFloat(document.getElementById('f-al-price').value) || 320;
+  const weldRate   = parseFloat(document.getElementById('f-weld').value) || 50;
+  const paintFrame = parseFloat(document.getElementById('f-paint-frame').value) || 420;
+  const paintSheet = parseFloat(document.getElementById('f-paint-sheet').value) || 350;
+  const laserPrice = parseFloat(document.getElementById('f-laser').value) || 500;
+  const stickPrice = parseFloat(document.getElementById('f-stickers').value) || 300;
+  const assemblyR  = parseFloat(document.getElementById('f-assembly').value) || 7;
+  const anchorPr   = parseFloat(document.getElementById('f-anchor').value) || 350;
+  const packPrice  = parseFloat(document.getElementById('f-pack').value) || 50;
+  const delivery   = parseFloat(document.getElementById('f-delivery').value) || 170;
+  const markup     = parseFloat(document.getElementById('f-markup').value) || 0;
+
+  // --- Вес рамы на 1 секцию ---
+  // Стойка: труба 57x3, площадь сечения = π/4*(57²-51²) мм²
+  const dOut = 57, dIn = 51;
+  const sectionPipe = Math.PI / 4 * (dOut*dOut - dIn*dIn); // мм²
+  const stakeLen = height; // мм
+  const stakeWeight = sectionPipe * stakeLen * 7.85e-9 * 2; // кг, 2 стойки
+
+  // Горизонталь: труба 40x20x2, площадь сечения = 40*20 - 36*16 = 224 мм²
+  const sectionHoriz = 40*20 - 36*16; // 224 мм²
+  const horizLen = width; // мм (ширина секции)
+  const horizWeight = sectionHoriz * horizLen * 7.85e-9 * 2; // кг, 2 горизонтали
+
+  const frameWeight = stakeWeight + horizWeight; // кг
+
+  // --- Вес листа на 1 секцию ---
+  const sheetWeight = (width * height * thick) * 2.70e-9; // кг
+
+  // --- Площади ---
+  const sheetArea = (width * height) / 1e6; // м²
+  // Площадь рамы (периметр трубы 57 * высота * 2 стойки + прямоугольная труба 40x20 * ширина * 2)
+  const framePerim57 = Math.PI * dOut / 1000; // м, длина окружности трубы 57
+  const frameArea57 = framePerim57 * stakeLen / 1000 * 2; // м²
+  const framePerim40 = 2 * (40 + 20) / 1000; // м, периметр прямоуг. трубы 40x20
+  const frameArea40 = framePerim40 * horizLen / 1000 * 2; // м²
+  const frameArea = frameArea57 + frameArea40; // м²
+
+  // --- Стоимость 1 секции ---
+  const matFrame    = frameWeight * steelPrice;
+  const matSheet    = sheetWeight * alPrice;
+  const perforation = holes * holePrice;
+  const welding     = frameWeight * weldRate;
+  const paintF      = frameArea * paintFrame;
+  const paintS      = sheetArea * 2 * paintSheet; // 2 стороны
+  const laser       = laserPrice;
+  const stickers    = stickPrice;
+  const assembly    = (frameWeight + sheetWeight) * assemblyR;
+  const anchor      = anchorPr * 2; // 2 блока на секцию
+  const pack        = packPrice;
+
+  const totalOne = matFrame + matSheet + perforation + welding + paintF + paintS + laser + stickers + assembly + anchor + pack;
+
+  // --- Весь заказ ---
+  const allSections = totalOne * qty;
+  const totalCost   = allSections + delivery;
+  const markupVal   = totalCost * markup / 100;
+  const salePrice   = totalCost + markupVal;
+
+  // --- Обновление UI ---
+  const fmt = v => v.toLocaleString('ru-RU', {maximumFractionDigits:0}) + ' ₽';
+  const fmtKg = v => v.toFixed(2) + ' кг';
+
+  document.getElementById('r-f-qty').textContent    = qty + ' шт';
+  document.getElementById('r-f-size').textContent   = width + '×' + height + ' мм';
+  document.getElementById('r-f-frame-kg').textContent = fmtKg(frameWeight);
+  document.getElementById('r-f-sheet-kg').textContent = fmtKg(sheetWeight);
+
+  document.getElementById('r-f-mat-frame').textContent   = fmt(matFrame);
+  document.getElementById('r-f-mat-sheet').textContent   = fmt(matSheet);
+  document.getElementById('r-f-perforation').textContent = fmt(perforation);
+  document.getElementById('r-f-welding').textContent     = fmt(welding);
+  document.getElementById('r-f-paint-f').textContent     = fmt(paintF);
+  document.getElementById('r-f-paint-s').textContent     = fmt(paintS);
+  document.getElementById('r-f-laser').textContent       = fmt(laser);
+  document.getElementById('r-f-stickers').textContent    = fmt(stickers);
+  document.getElementById('r-f-assembly').textContent    = fmt(assembly);
+  document.getElementById('r-f-anchor').textContent      = fmt(anchor);
+  document.getElementById('r-f-pack').textContent        = fmt(pack);
+  document.getElementById('r-f-one').textContent         = fmt(totalOne);
+
+  document.getElementById('r-f-all-sec').textContent     = fmt(allSections);
+  document.getElementById('r-f-delivery').textContent    = fmt(delivery);
+  document.getElementById('r-f-cost').textContent        = fmt(totalCost);
+  document.getElementById('r-f-markup-val').textContent  = markup + '% = ' + fmt(markupVal);
+  document.getElementById('r-f-price-big').textContent   = fmt(salePrice);
+  document.getElementById('r-f-price-per').textContent   = qty > 1 ? 'за ' + qty + ' секций · ' + fmt(salePrice/qty) + '/секция' : 'за 1 секцию';
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   onCMaterialChange();
   onMMaterialChange();
   calcCassette();
   calcMK();
   nestUpdatePrice();
+  calcFencing();
 });
 </script>
 </body>
