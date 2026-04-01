@@ -2705,25 +2705,28 @@ function calcFencing() {
   const sheetThick  = g('f_sheet_thick');
 
   // ── ВЕСА ──
-  // Стойки: труба ⌀51, длина 4000 мм (2 штуки по 2000мм), плотность 7.85
-  const dOut = 51, dIn = dOut - 2 * postThick;
-  const postArea  = Math.PI / 4 * (dOut*dOut - dIn*dIn); // мм²
-  const postWeight = postArea * 4000 * 7.85e-9; // кг (4м суммарно)
-
-  // Перекладины: профиль 30×20, 4 шт × 2400 мм (с учётом реза) = 9600 мм суммарно
-  // + пластины Ст3 2мм 50×70 мм, 6 шт
-  const bW = 30, bH = 20;
-  const barArea   = bW*bH - (bW - 2*barThick)*(bH - 2*barThick); // мм²
-  const barWeight = barArea * (4 * 2400) * 7.85e-9; // кг (9.6 м.п.)
-  const plateWeight = 6 * (50 * 70 * 2) * 7.85e-9; // кг, пластины 50×70×2
+  // Удельные веса по справочнику (кг/м.п.):
+  // Труба ⌀51×1.5 = 1.83, ⌀51×2.0 = 2.42, ⌀51×3.0 = 3.56
+  // Профиль 30×20×1.5 = 1.08, 30×20×2.0 = 1.42
+  const postWeightPerM = {1.5: 1.83, 2: 2.42, 3: 3.56}[postThick] || 2.42;
+  const barWeightPerM  = {1.5: 1.08, 2: 1.42}[barThick] || 1.42;
+  
+  // Стойки: 4 м.п. (2 шт × 2000 мм)
+  const postWeight = 4 * postWeightPerM; // кг
+  
+  // Перекладины: 9.6 м.п. (4 шт × 2400 мм с резом) + пластины 6 шт
+  const barWeight = 9.6 * barWeightPerM; // кг
+  const plateWeight = 6 * (50 * 70 * 2) * 7.85e-9; // кг, пластины 50×70×2мм
 
   const frameWeightKg = postWeight + barWeight + plateWeight;
 
-  // Листы: оцинкованная сталь плотность 7.85
-  // Лист 1: 1250×2300×thick мм = 2.875 м²
-  // Лист 2: 625×2300×thick мм = 1.4375 м² (итого 4.3125 м²)
-  const sheet1Weight = 1250 * 2300 * sheetThick * 7.85e-9;
-  const sheet2Weight = 625  * 2300 * sheetThick * 7.85e-9;
+  // Листы: оцинкованная сталь
+  // Удельный вес листа: толщина(мм) × 7.85 кг/м²
+  // Лист 1: 1250×2300 = 2.875 м²
+  // Лист 2: 625×2300 = 1.4375 м² (итого 4.3125 м²)
+  const sheetWeightPerM2 = sheetThick * 7.85; // кг/м²
+  const sheet1Weight = 2.875 * sheetWeightPerM2;
+  const sheet2Weight = 1.4375 * sheetWeightPerM2;
   const sheetWeightKg = sheet1Weight + sheet2Weight;
 
   // ── ПЛОЩАДИ ──
