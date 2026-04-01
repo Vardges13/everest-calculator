@@ -2708,8 +2708,8 @@ function calcFencing() {
   // Удельные веса по справочнику (кг/м.п.):
   // Труба ⌀51×1.5 = 1.83, ⌀51×2.0 = 2.42, ⌀51×3.0 = 3.56
   // Профиль 30×20×1.5 = 1.08, 30×20×2.0 = 1.42
-  const postWeightPerM = {1.5: 1.83, 2: 2.42, 3: 3.56}[postThick] || 2.42;
-  const barWeightPerM  = {1.5: 1.08, 2: 1.42}[barThick] || 1.42;
+  const postWeightPerM = {'1.5': 1.83, '2': 2.42, '3': 3.56}[postThick] || 2.42;
+  const barWeightPerM  = {'1.5': 1.08, '2': 1.42}[barThick] || 1.42;
   
   // Стойки: 4 м.п. (2 шт × 2000 мм)
   const postWeight = 4 * postWeightPerM; // кг
