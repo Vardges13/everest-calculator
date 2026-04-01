@@ -2706,8 +2706,8 @@ function calcFencing() {
   const frameCover  = sel('f_frame_cover');  // powder | zinc
   const sheetCover  = sel('f_sheet_cover');  // none | powder | pe
   const symbolMeth  = sel('f_symbol_method'); // laser | sticker
-  const postThick   = g('f_post_thick');     // мм стенки трубы 51
-  const barThick    = g('f_bar_thick');      // мм стенки профиля 30×20
+  const postThick   = sel('f_post_thick');   // строка: '1.5', '2', '3'
+  const barThick    = sel('f_bar_thick');    // строка: '1.5', '2'
   const framePrKg   = g('f_frame_price_kg');
   const sheetPrKg   = g('f_sheet_price_kg');
   const sheetThick  = g('f_sheet_thick');
