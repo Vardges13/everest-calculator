@@ -664,9 +664,100 @@
       </div>
     </div>
 
-    <!-- ШАГ 4: Покрытие -->
+    <!-- ШАГ 4: Рёбра (каркас) усиления -->
     <div class="card">
-      <div class="card-header"><div class="step-num">4</div><h3>Покрытие</h3></div>
+      <div class="card-header"><div class="step-num">4</div><h3>Рёбра (каркас) усиления</h3></div>
+      <div class="card-body">
+        <div class="field-row">
+          <div>
+            <label>М/п рёбер на 1 м² развёртки</label>
+            <input type="number" id="c_rib_mp" value="2.2" min="0" step="0.1" oninput="calcCassette()">
+          </div>
+          <div>
+            <label>Площадь материала рёбер (м²)</label>
+            <div class="auto-val" id="c_rib_area">0.198</div>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label>Стоимость материала рёбер на 1 м² развёртки (руб)</label>
+          <div class="auto-val accent" id="c_rib_mat_cost" style="background:#eaf7f0;border-color:#a0d8b8;color:var(--green)">—</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field-wrap">
+          <label>Способ крепления ребра</label>
+          <select id="c_rib_fix" onchange="onRibFixChange(); calcCassette()">
+            <option value="stud">На шпильку и заклёпку</option>
+            <option value="tape">На скотч</option>
+            <option value="seal">На герметик</option>
+          </select>
+        </div>
+
+        <!-- Общее для всех: заклёпки -->
+        <div class="field-row">
+          <div>
+            <label>Заклёпок на 1 м/п ребра</label>
+            <div class="auto-val" id="c_rib_rivet_per_mp">4</div>
+          </div>
+          <div>
+            <label>Цена за 1 заклёпку (руб)</label>
+            <input type="number" id="c_rib_rivet_price" value="3" min="0" step="0.1" oninput="calcCassette()">
+          </div>
+        </div>
+
+        <!-- Шпилька: только при stud -->
+        <div id="c_rib_stud_block">
+          <div class="field-row">
+            <div>
+              <label>Комплектов (шпилька, шайба, гайка) на 1 м/п</label>
+              <div class="auto-val" id="c_rib_stud_per_mp">5</div>
+            </div>
+            <div>
+              <label>Цена за 1 комплект (руб)</label>
+              <input type="number" id="c_rib_stud_price" value="10" min="0" step="0.1" oninput="calcCassette()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Скотч: только при tape -->
+        <div id="c_rib_tape_block" style="display:none">
+          <div class="field-row">
+            <div>
+              <label>Скотча на 1 м/п ребра (м/п)</label>
+              <div class="auto-val">1</div>
+            </div>
+            <div>
+              <label>Цена за 1 м/п скотча (руб)</label>
+              <input type="number" id="c_rib_tape_price" value="50" min="0" step="1" oninput="calcCassette()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Герметик: только при seal -->
+        <div id="c_rib_seal_block" style="display:none">
+          <div class="field-row">
+            <div>
+              <label>Герметика на 1 м/п ребра (м/п)</label>
+              <div class="auto-val">1</div>
+            </div>
+            <div>
+              <label>Цена за 1 м/п герметика (руб)</label>
+              <input type="number" id="c_rib_seal_price" value="80" min="0" step="1" oninput="calcCassette()">
+            </div>
+          </div>
+        </div>
+
+        <div class="field-wrap" style="margin-top:8px;">
+          <label>Итого расходники крепления на 1 м² развёртки (руб)</label>
+          <div class="auto-val accent" id="c_rib_fix_cost" style="background:#eaf7f0;border-color:#a0d8b8;color:var(--green)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 5: Покрытие -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">5</div><h3>Покрытие</h3></div>
       <div class="card-body">
         <div class="cover-select-wrap">
           <label>Вид покрытия</label>
@@ -772,9 +863,9 @@
       </div>
     </div>
 
-    <!-- ШАГ 5: КИТ -->
+    <!-- ШАГ 6: КИТ -->
     <div class="card">
-      <div class="card-header"><div class="step-num">5</div><h3>КИТ — Конструкторская и технологическая разработка</h3></div>
+      <div class="card-header"><div class="step-num">6</div><h3>КИТ — Конструкторская и технологическая разработка</h3></div>
       <div class="card-body">
         <div class="info-box">Привязана к <strong>продаваемой единице</strong> (1 м² по выбранной единице измерения).</div>
         <div class="field-wrap">
@@ -784,9 +875,9 @@
       </div>
     </div>
 
-    <!-- ШАГ 6: Работы -->
+    <!-- ШАГ 7: Работы -->
     <div class="card">
-      <div class="card-header"><div class="step-num">6</div><h3>Стоимость работ</h3></div>
+      <div class="card-header"><div class="step-num">7</div><h3>Стоимость работ</h3></div>
       <div class="card-body">
         <div class="field-row">
           <div>
@@ -799,9 +890,42 @@
           </div>
         </div>
 
-        <div class="field-wrap">
-          <label>Сборка рёбер усиления (руб/м² развёртки, 0 = не учитывать)</label>
-          <input type="number" id="c_work_rib" value="0" min="0" oninput="calcCassette()">
+        <div class="section-divider"></div>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:8px;font-weight:600;">Работы по рёбрам усиления</div>
+        <div class="field-row">
+          <div>
+            <label>Изготовление ребра (руб/м.п.)</label>
+            <input type="number" id="c_work_rib_make" value="0" min="0" step="1" oninput="calcCassette()">
+          </div>
+          <div>
+            <label>Установка 1 заклёпки (руб)</label>
+            <input type="number" id="c_work_rib_rivet" value="0" min="0" step="1" oninput="calcCassette()">
+          </div>
+        </div>
+        <!-- Работы по шпильке -->
+        <div id="c_work_stud_block">
+          <div class="field-wrap">
+            <label>Установка 1 компл. (шпилька, шайба, гайка) (руб)</label>
+            <input type="number" id="c_work_rib_stud" value="0" min="0" step="1" oninput="calcCassette()">
+          </div>
+        </div>
+        <!-- Работы по скотчу -->
+        <div id="c_work_tape_block" style="display:none">
+          <div class="field-wrap">
+            <label>Установка 1 м/п скотча (руб)</label>
+            <input type="number" id="c_work_rib_tape" value="0" min="0" step="1" oninput="calcCassette()">
+          </div>
+        </div>
+        <!-- Работы по герметику -->
+        <div id="c_work_seal_block" style="display:none">
+          <div class="field-wrap">
+            <label>Установка 1 м/п герметика (руб)</label>
+            <input type="number" id="c_work_rib_seal" value="0" min="0" step="1" oninput="calcCassette()">
+          </div>
+        </div>
+        <div class="field-wrap" style="margin-top:4px;">
+          <label>Итого работы по рёбрам на 1 м² развёртки (руб)</label>
+          <div class="auto-val" id="c_rib_work_total">—</div>
         </div>
 
         <div class="section-divider"></div>
@@ -859,6 +983,14 @@
           <span class="result-label">Металл</span>
           <span class="result-value accent" id="r-c-mat-cost">1 901 ₽</span>
         </div>
+        <div class="result-row" id="r-c-rib-mat-row">
+          <span class="result-label">Рёбра (материал)</span>
+          <span class="result-value" id="r-c-rib-mat-val">—</span>
+        </div>
+        <div class="result-row" id="r-c-rib-fix-row">
+          <span class="result-label">Рёбра (расходники)</span>
+          <span class="result-value" id="r-c-rib-fix-val">—</span>
+        </div>
         <div class="result-row" id="r-c-cover-row">
           <span class="result-label" id="r-c-cover-label">Покрытие (материал)</span>
           <span class="result-value" id="r-c-cover-mat-cost">—</span>
@@ -899,9 +1031,9 @@
           <span class="result-label">Вальцовка</span>
           <span class="result-value" id="r-c-roll-cost">1 200 ₽</span>
         </div>
-        <div class="result-row" id="r-c-rib-row">
-          <span class="result-label">Рёбра усиления</span>
-          <span class="result-value" id="r-c-rib-cost">—</span>
+        <div class="result-row" id="r-c-rib-work-row">
+          <span class="result-label">Рёбра (работы)</span>
+          <span class="result-value" id="r-c-rib-work-val">—</span>
         </div>
         <div class="result-row" id="r-c-perf-row">
           <span class="result-label">Перфорация (<span id="r-c-perf-cnt">—</span> отв.)</span>
@@ -1851,6 +1983,19 @@ function calcCPerf() {
 }
 
 // ═══════════════════════════════════════════
+// КАССЕТЫ — РЁБРА УСИЛЕНИЯ: переключение способа крепления
+// ═══════════════════════════════════════════
+function onRibFixChange() {
+  const fix = document.getElementById('c_rib_fix').value;
+  document.getElementById('c_rib_stud_block').style.display = fix === 'stud' ? '' : 'none';
+  document.getElementById('c_rib_tape_block').style.display = fix === 'tape' ? '' : 'none';
+  document.getElementById('c_rib_seal_block').style.display = fix === 'seal' ? '' : 'none';
+  document.getElementById('c_work_stud_block').style.display = fix === 'stud' ? '' : 'none';
+  document.getElementById('c_work_tape_block').style.display = fix === 'tape' ? '' : 'none';
+  document.getElementById('c_work_seal_block').style.display = fix === 'seal' ? '' : 'none';
+}
+
+// ═══════════════════════════════════════════
 // КАССЕТЫ — ГЛАВНЫЙ РАСЧЁТ
 // ═══════════════════════════════════════════
 function calcCassette() {
@@ -1914,10 +2059,55 @@ function calcCassette() {
   }
   const coverCost = coverMatCost + coverWorkCost;
 
-  // --- РАБОТЫ ---
+  // --- РЁБРА УСИЛЕНИЯ ---
+  const ribMpPerM2 = parseFloat(document.getElementById('c_rib_mp').value) || 0;  // м/п рёбер на 1 м² развёртки
+  const ribAreaConst = 0.09; // м² материала на 1 м/п ребра
+  const ribAreaPerM2 = ribMpPerM2 * ribAreaConst; // м² материала рёбер на 1 м² развёртки
+  const ribMatCostPerM2 = ribAreaPerM2 * priceM2; // стоимость материала рёбер на 1 м² развёртки
+
+  // Расходники крепления (на 1 м² развёртки)
+  const fixType = document.getElementById('c_rib_fix').value;
+  const rivetPerMp = 4;
+  const rivetPrice = parseFloat(document.getElementById('c_rib_rivet_price').value) || 0;
+  const totalRivets = Math.ceil(ribMpPerM2 * rivetPerMp); // округляем вверх
+  const rivetCost = totalRivets * rivetPrice;
+
+  let fixMatCost = rivetCost; // базовая часть - заклёпки
+  if (fixType === 'stud') {
+    const studPerMp = 5;
+    const studPrice = parseFloat(document.getElementById('c_rib_stud_price').value) || 0;
+    const totalStuds = Math.ceil(ribMpPerM2 * studPerMp); // округляем вверх
+    fixMatCost += totalStuds * studPrice;
+  } else if (fixType === 'tape') {
+    const tapePerMp = 1; // м/п скотча на 1 м/п ребра
+    const tapePrice = parseFloat(document.getElementById('c_rib_tape_price').value) || 0;
+    fixMatCost += ribMpPerM2 * tapePerMp * tapePrice; // без округления
+  } else if (fixType === 'seal') {
+    const sealPerMp = 1; // м/п герметика на 1 м/п ребра
+    const sealPrice = parseFloat(document.getElementById('c_rib_seal_price').value) || 0;
+    fixMatCost += ribMpPerM2 * sealPerMp * sealPrice; // без округления
+  }
+
+  // Работы по рёбрам (на 1 м² развёртки)
+  const workMakePerMp = parseFloat(document.getElementById('c_work_rib_make').value) || 0;
+  const workRivetEach = parseFloat(document.getElementById('c_work_rib_rivet').value) || 0;
+  let ribWorkCost = ribMpPerM2 * workMakePerMp + totalRivets * workRivetEach;
+
+  if (fixType === 'stud') {
+    const workStudEach = parseFloat(document.getElementById('c_work_rib_stud').value) || 0;
+    const totalStuds = Math.ceil(ribMpPerM2 * 5);
+    ribWorkCost += totalStuds * workStudEach;
+  } else if (fixType === 'tape') {
+    const workTapePerMp = parseFloat(document.getElementById('c_work_rib_tape').value) || 0;
+    ribWorkCost += ribMpPerM2 * 1 * workTapePerMp; // без округления
+  } else if (fixType === 'seal') {
+    const workSealPerMp = parseFloat(document.getElementById('c_work_rib_seal').value) || 0;
+    ribWorkCost += ribMpPerM2 * 1 * workSealPerMp; // без округления
+  }
+
+  // --- РАБОТЫ (остальные) ---
   const mechCost = (parseFloat(document.getElementById('c_work_mech').value) || 0) * developArea;
   const rollCost = (parseFloat(document.getElementById('c_work_roll').value) || 0) * developArea;
-  const ribCost  = (parseFloat(document.getElementById('c_work_rib').value)  || 0) * developArea;
 
   let perfCost = 0, perfCount = 0;
   const perfPriceEach = parseFloat(document.getElementById('c_perf_price').value) || 0;
@@ -1934,9 +2124,9 @@ function calcCassette() {
   // КИТ — привязана к продаваемой единице (1 м²)
   const kitCost = parseFloat(document.getElementById('c_kit').value) || 0;
 
-  const groupMat  = matCost + coverMatCost + packCost + delCost;
+  const groupMat  = matCost + ribMatCostPerM2 + fixMatCost + coverMatCost + packCost + delCost;
   // Работы: работы покраски + мех + вальцовка + рёбра + перфорация
-  const groupWork = coverWorkCost + mechCost + rollCost + ribCost + perfCost;
+  const groupWork = coverWorkCost + mechCost + rollCost + ribWorkCost + perfCost;
 
   const total = groupMat + groupWork + kitCost;
   const markup = parseFloat(document.getElementById('c_markup').value) || 0;
@@ -1985,9 +2175,42 @@ function calcCassette() {
     pwWorkRow.style.display = 'none';
   }
 
+  // Рёбра - авто-значения
+  document.getElementById('c_rib_area').textContent = ribAreaPerM2.toFixed(3);
+  document.getElementById('c_rib_mat_cost').textContent = fmtR(ribMatCostPerM2);
+  document.getElementById('c_rib_fix_cost').textContent = fmtR(fixMatCost);
+  document.getElementById('c_rib_work_total').textContent = fmtR(ribWorkCost);
+
+  // Материалы рёбер
+  const ribMatRow = document.getElementById('r-c-rib-mat-row');
+  if (ribMatCostPerM2 > 0) {
+    ribMatRow.style.display = '';
+    document.getElementById('r-c-rib-mat-val').textContent = fmtR(ribMatCostPerM2);
+  } else {
+    ribMatRow.style.display = 'none';
+  }
+
+  // Расходники рёбер
+  const ribFixRow = document.getElementById('r-c-rib-fix-row');
+  if (fixMatCost > 0) {
+    ribFixRow.style.display = '';
+    document.getElementById('r-c-rib-fix-val').textContent = fmtR(fixMatCost);
+  } else {
+    ribFixRow.style.display = 'none';
+  }
+
   document.getElementById('r-c-mech-cost').textContent  = mechCost > 0 ? fmtR(mechCost) : '—';
   document.getElementById('r-c-roll-cost').textContent  = rollCost > 0 ? fmtR(rollCost) : '—';
-  document.getElementById('r-c-rib-cost').textContent   = ribCost  > 0 ? fmtR(ribCost)  : '—';
+
+  // Работы рёбер
+  const ribWorkRow = document.getElementById('r-c-rib-work-row');
+  if (ribWorkCost > 0) {
+    ribWorkRow.style.display = '';
+    document.getElementById('r-c-rib-work-val').textContent = fmtR(ribWorkCost);
+  } else {
+    ribWorkRow.style.display = 'none';
+  }
+
   document.getElementById('r-c-perf-cost').textContent  = perfCost > 0 ? fmtR(perfCost) : '—';
   document.getElementById('r-c-perf-cnt').textContent   = perfCount > 0 ? fmt(perfCount) : '—';
   document.getElementById('r-c-work-total').textContent = groupWork > 0 ? fmtR(groupWork) : '—';
