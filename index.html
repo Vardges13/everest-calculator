@@ -553,9 +553,37 @@
 <div class="main">
   <div class="left-col">
 
-    <!-- ШАГ 1: Единица измерения -->
+    <!-- ШАГ 1: Методика расчёта -->
     <div class="card">
-      <div class="card-header"><div class="step-num">1</div><h3>Единица измерения</h3></div>
+      <div class="card-header"><div class="step-num">1</div><h3>Методика расчёта</h3></div>
+      <div class="card-body">
+        <div class="radio-group">
+          <label class="radio-card active" onclick="setCMethod('approx')">
+            <input type="radio" name="c_method" value="approx" checked>
+            <div class="radio-dot"></div>
+            <div>
+              <div class="radio-label">Аппроксимация</div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:2px">Ручной Кт и отходы</div>
+            </div>
+            <span class="tip" data-tip="Классический расчёт: выбираете единицу (развёртка/видимая/проекция) и вручную указываете коэффициент трансформации">?</span>
+          </label>
+          <label class="radio-card" onclick="setCMethod('bytype')">
+            <input type="radio" name="c_method" value="bytype">
+            <div class="radio-dot"></div>
+            <div>
+              <div class="radio-label">По типу</div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:2px">Точный Кт по чертежу</div>
+            </div>
+            <span class="tip" data-tip="Точный расчёт: выбираете тип изделия, вводите размеры — Кт рассчитывается автоматически по развёртке">?</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ШАГ 2: Аппроксимация (старый режим) -->
+    <div id="c-approx-block">
+    <div class="card">
+      <div class="card-header"><div class="step-num">2</div><h3>Единица измерения</h3></div>
       <div class="card-body">
         <div class="radio-group">
           <label class="radio-card active" onclick="setCUnit('develop')">
@@ -589,9 +617,8 @@
       </div>
     </div>
 
-    <!-- ШАГ 2: Коэффициенты -->
     <div class="card">
-      <div class="card-header"><div class="step-num">2</div><h3>Коэффициенты</h3></div>
+      <div class="card-header"><div class="step-num">3</div><h3>Коэффициенты</h3></div>
       <div class="card-body">
         <div id="c-coef-transform-wrap" class="field-wrap hidden">
           <div class="field-label-row">
@@ -612,6 +639,105 @@
         </div>
       </div>
     </div>
+    </div><!-- /c-approx-block -->
+
+    <!-- ШАГ 2: По типу (новый режим) -->
+    <div id="c-bytype-block" style="display:none">
+    <div class="card">
+      <div class="card-header"><div class="step-num">2</div><h3>Тип изделия</h3></div>
+      <div class="card-body">
+        <div class="field-wrap">
+          <label>Тип кассеты</label>
+          <select id="c_type_select" onchange="onCTypeChange()">
+            <option value="hidden">Кассета скрытого монтажа</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Чертёж + размеры -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">3</div><h3>Размеры изделия</h3></div>
+      <div class="card-body" style="padding:0;">
+        <img src="img/kasseta-hidden.jpg" alt="Кассета скрытого монтажа" style="width:100%;border-radius:8px 8px 0 0;">
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">A1×B1 — видимая часть. Полки: A2, A3, B2, B3, B4 — гибы. Развёртка = (A2+A1+A3) × (B4+B3+B1+B2)</div>
+        <div class="field-row">
+          <div>
+            <label>A1 — ширина (мм)</label>
+            <input type="number" id="ct_a1" value="500" min="50" step="1" oninput="calcTypeKt()">
+          </div>
+          <div>
+            <label>B1 — высота (мм)</label>
+            <input type="number" id="ct_b1" value="600" min="50" step="1" oninput="calcTypeKt()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>A2 — левая полка (мм)</label>
+            <input type="number" id="ct_a2" value="30" min="0" step="1" oninput="calcTypeKt()">
+          </div>
+          <div>
+            <label>A3 — правая полка (мм)</label>
+            <input type="number" id="ct_a3" value="30" min="0" step="1" oninput="calcTypeKt()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>B2 — нижняя полка (мм)</label>
+            <input type="number" id="ct_b2" value="30" min="0" step="1" oninput="calcTypeKt()">
+          </div>
+          <div>
+            <label>B3 — верхняя полка (мм)</label>
+            <input type="number" id="ct_b3" value="35" min="0" step="1" oninput="calcTypeKt()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>B4 — кромка верхняя (мм)</label>
+            <input type="number" id="ct_b4" value="20" min="0" step="1" oninput="calcTypeKt()">
+          </div>
+          <div></div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:11px;color:var(--text-light);">Развёртка</div>
+            <div style="font-size:18px;font-weight:700;color:var(--green);" id="ct_develop_size">560 × 685 мм</div>
+            <div style="font-size:11px;color:var(--text-light);" id="ct_develop_area">0.3836 м²</div>
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:11px;color:var(--text-light);">Видимая часть</div>
+            <div style="font-size:18px;font-weight:700;color:var(--blue);" id="ct_visible_size">500 × 600 мм</div>
+            <div style="font-size:11px;color:var(--text-light);" id="ct_visible_area">0.3000 м²</div>
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:11px;color:var(--text-light);">Коэфф. трансформации</div>
+            <div style="font-size:24px;font-weight:700;color:var(--orange);" id="ct_kt">1.279</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="step-num">4</div><h3>Отходная часть</h3></div>
+      <div class="card-body">
+        <div class="field-wrap">
+          <div class="field-label-row">
+            <label>Отходная часть (%)</label>
+            <span class="tip" data-tip="Процент дополнительного материала на отходы">?</span>
+          </div>
+          <input type="number" id="ct_waste" value="10" min="0" max="99" step="0.1" oninput="calcCassette()">
+        </div>
+        <div class="info-box" id="ct-coef-info">
+          Стоимость выводится на: <strong>развёртку</strong> и <strong>видимую часть</strong>
+        </div>
+      </div>
+    </div>
+    </div><!-- /c-bytype-block -->
 
     <!-- ШАГ 3: Материал -->
     <div class="card">
@@ -1079,6 +1205,19 @@
         <div class="result-develop-hint" id="r-c-final-develop-hint" style="display:none">
           с наценкой за развёртку: <span id="r-c-final-develop">—</span>
         </div>
+        <!-- Блок "По типу" — стоимость за видимую часть -->
+        <div id="r-c-bytype-extra" style="display:none;margin-top:8px;padding:10px;background:rgba(255,255,255,0.08);border-radius:6px;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px;">за 1 м² видимой части</div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:12px;color:rgba(255,255,255,0.7);">Стоимость</span>
+            <span style="font-size:14px;font-weight:700;color:#f59000;" id="r-c-bytype-vis-total">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;">
+            <span style="font-size:12px;color:rgba(255,255,255,0.7);">С НДС 22%</span>
+            <span style="font-size:14px;font-weight:700;color:#fff;" id="r-c-bytype-vis-final">—</span>
+          </div>
+        </div>
+
         <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px">за 1 м² · <span id="r-c-unit-bot">развёртка</span></div>
       </div>
     </div>
@@ -1985,6 +2124,51 @@ function calcCPerf() {
 // ═══════════════════════════════════════════
 // КАССЕТЫ — РЁБРА УСИЛЕНИЯ: переключение способа крепления
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// КАССЕТЫ — МЕТОДИКА РАСЧЁТА
+// ═══════════════════════════════════════════
+let cMethod = 'approx'; // 'approx' | 'bytype'
+
+function setCMethod(method) {
+  cMethod = method;
+  document.querySelectorAll('[name=c_method]').forEach(r => {
+    r.closest('.radio-card').classList.toggle('active', r.value === method);
+  });
+  document.getElementById('c-approx-block').style.display = method === 'approx' ? '' : 'none';
+  document.getElementById('c-bytype-block').style.display = method === 'bytype' ? '' : 'none';
+  if (method === 'bytype') calcTypeKt();
+  calcCassette();
+}
+
+function onCTypeChange() {
+  calcTypeKt();
+  calcCassette();
+}
+
+function calcTypeKt() {
+  const a1 = parseFloat(document.getElementById('ct_a1').value) || 0;
+  const a2 = parseFloat(document.getElementById('ct_a2').value) || 0;
+  const a3 = parseFloat(document.getElementById('ct_a3').value) || 0;
+  const b1 = parseFloat(document.getElementById('ct_b1').value) || 0;
+  const b2 = parseFloat(document.getElementById('ct_b2').value) || 0;
+  const b3 = parseFloat(document.getElementById('ct_b3').value) || 0;
+  const b4 = parseFloat(document.getElementById('ct_b4').value) || 0;
+
+  const devW = a2 + a1 + a3;
+  const devH = b4 + b3 + b1 + b2;
+  const devArea = devW * devH / 1000000; // м²
+  const visArea = a1 * b1 / 1000000;     // м²
+  const kt = visArea > 0 ? devArea / visArea : 0;
+
+  document.getElementById('ct_develop_size').textContent = devW + ' × ' + devH + ' мм';
+  document.getElementById('ct_develop_area').textContent = devArea.toFixed(4) + ' м²';
+  document.getElementById('ct_visible_size').textContent = a1 + ' × ' + b1 + ' мм';
+  document.getElementById('ct_visible_area').textContent = visArea.toFixed(4) + ' м²';
+  document.getElementById('ct_kt').textContent = kt.toFixed(3);
+
+  calcCassette();
+}
+
 function onRibFixChange() {
   const fix = document.getElementById('c_rib_fix').value;
   document.getElementById('c_rib_stud_block').style.display = fix === 'stud' ? '' : 'none';
@@ -2002,8 +2186,15 @@ function calcCassette() {
   const mat    = MATERIALS[document.getElementById('c_material').value];
   const thick  = parseFloat(document.getElementById('c_thick').value) || 0;
   const priceKg= parseFloat(document.getElementById('c_price_kg').value) || 0;
-  const waste  = parseFloat(document.getElementById('c_waste').value) || 0;
-  const coefTr = (cUnit === 'develop') ? 1 : (parseFloat(document.getElementById('c_coef_transform').value) || 1);
+  let waste, coefTr;
+  if (cMethod === 'bytype') {
+    // Режим "По типу": Kt из размеров, стоимость на развёртку (как develop)
+    waste = parseFloat(document.getElementById('ct_waste').value) || 0;
+    coefTr = 1; // базовый расчёт на развёртку
+  } else {
+    waste = parseFloat(document.getElementById('c_waste').value) || 0;
+    coefTr = (cUnit === 'develop') ? 1 : (parseFloat(document.getElementById('c_coef_transform').value) || 1);
+  }
 
   // Вес 1 м² листа: плотность (г/см³) × толщина (мм) = кг/м²
   // Пример: Al 2.70 г/см³ × 2 мм = 5.40 кг/м²
@@ -2244,6 +2435,21 @@ function calcCassette() {
   } else {
     developHint.style.display      = 'none';
     finalDevelopHint.style.display = 'none';
+  }
+
+  // Блок "По типу" — стоимость за видимую часть
+  const bytypeExtra = document.getElementById('r-c-bytype-extra');
+  if (cMethod === 'bytype') {
+    const kt = parseFloat(document.getElementById('ct_kt').textContent) || 1;
+    const visTotal = total * kt;
+    const visFinal = finalPrice * kt;
+    bytypeExtra.style.display = '';
+    document.getElementById('r-c-bytype-vis-total').textContent = fmtR(visTotal) + ' ₽/м²';
+    document.getElementById('r-c-bytype-vis-final').textContent = fmtR(visFinal) + ' ₽/м²';
+    // Обновляем метку внизу
+    document.getElementById('r-c-unit-bot').textContent = 'развёртка';
+  } else {
+    bytypeExtra.style.display = 'none';
   }
 }
 
@@ -2878,6 +3084,7 @@ window.addEventListener('DOMContentLoaded', () => {
   onCMaterialChange();
   onMMaterialChange();
   onRibFixChange();
+  calcTypeKt();
   calcCassette();
   calcMK();
   nestUpdatePrice();
