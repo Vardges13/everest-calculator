@@ -852,6 +852,26 @@
     <div class="card">
       <div class="card-header"><div class="step-num">4</div><h3>Рёбра (каркас) усиления</h3></div>
       <div class="card-body">
+
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;font-weight:600;">Сечение ребра — П-образный профиль</div>
+        <div class="field-row">
+          <div>
+            <label>А1 — левая полка (мм)</label>
+            <input type="number" id="c_rib_pa1" value="30" min="0" step="1" oninput="calcCassette()">
+          </div>
+          <div>
+            <label>А2 — дно (мм)</label>
+            <input type="number" id="c_rib_pa2" value="30" min="0" step="1" oninput="calcCassette()">
+          </div>
+          <div>
+            <label>А3 — правая полка (мм)</label>
+            <input type="number" id="c_rib_pa3" value="30" min="0" step="1" oninput="calcCassette()">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-light);margin:4px 0 10px;">Развёртка 1 м/п: (А1+А2+А3) × 1000 мм = <strong id="c_rib_dev_info">90 × 1000 мм = 0.090 м²</strong></div>
+
+        <div class="section-divider"></div>
+
         <div class="field-row">
           <div>
             <label>М/п рёбер на 1 м² развёртки</label>
@@ -2484,9 +2504,16 @@ function calcCassette() {
   const coverCost = coverMatCost + coverWorkCost;
 
   // --- РЁБРА УСИЛЕНИЯ ---
-  const ribMpPerM2 = parseFloat(document.getElementById('c_rib_mp').value) || 0;  // м/п рёбер на 1 м² развёртки
-  const ribAreaConst = 0.09; // м² материала на 1 м/п ребра
-  const ribAreaPerM2 = ribMpPerM2 * ribAreaConst; // м² материала рёбер на 1 м² развёртки
+  const ribMpPerM2 = parseFloat(document.getElementById('c_rib_mp').value) || 0;
+  // Сечение П-профиля
+  const ribPA1 = parseFloat(document.getElementById('c_rib_pa1').value) || 0;
+  const ribPA2 = parseFloat(document.getElementById('c_rib_pa2').value) || 0;
+  const ribPA3 = parseFloat(document.getElementById('c_rib_pa3').value) || 0;
+  const ribDevWidth = ribPA1 + ribPA2 + ribPA3; // мм
+  const ribAreaConst = ribDevWidth / 1000; // м² материала на 1 м/п ребра
+  const ribAreaPerM2 = ribMpPerM2 * ribAreaConst;
+  // Обновляем инфо
+  document.getElementById('c_rib_dev_info').textContent = ribDevWidth + ' × 1000 мм = ' + ribAreaConst.toFixed(3) + ' м²';
   const ribMatCostPerM2 = ribAreaPerM2 * priceM2; // стоимость материала рёбер на 1 м² развёртки
 
   // Расходники крепления (на 1 м² развёртки)
