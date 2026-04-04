@@ -2777,17 +2777,17 @@ function ctNestCalc() {
     this.used=[];this.free=[new MRRect(0,0,w,h)];
   }
   MaxRectsBP.prototype.insert=function(w,h){
-    // BSSF с поворотом
-    var best=null,bestSS=Infinity,bestLS=Infinity;
+    // BottomLeft: минимизируем Y (высоту), затем X — предпочитает ориентацию с меньшей высотой
+    var best=null,bestY=Infinity,bestX=Infinity;
     for(var i=0;i<this.free.length;i++){
       var r=this.free[i];
       if(r.width>=w&&r.height>=h){
-        var ss=Math.min(r.width-w,r.height-h),ls=Math.max(r.width-w,r.height-h);
-        if(ss<bestSS||(ss===bestSS&&ls<bestLS)){best=new MRRect(r.x,r.y,w,h);bestSS=ss;bestLS=ls;}
+        var ty=r.y+h;
+        if(ty<bestY||(ty===bestY&&r.x<bestX)){best=new MRRect(r.x,r.y,w,h);bestY=ty;bestX=r.x;}
       }
       if(r.width>=h&&r.height>=w){
-        var ss2=Math.min(r.width-h,r.height-w),ls2=Math.max(r.width-h,r.height-w);
-        if(ss2<bestSS||(ss2===bestSS&&ls2<bestLS)){best=new MRRect(r.x,r.y,h,w);bestSS=ss2;bestLS=ls2;}
+        var ty2=r.y+w;
+        if(ty2<bestY||(ty2===bestY&&r.x<bestX)){best=new MRRect(r.x,r.y,h,w);bestY=ty2;bestX=r.x;}
       }
     }
     if(!best)return null;
