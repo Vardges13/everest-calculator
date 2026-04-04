@@ -2899,36 +2899,63 @@ function ctNestCalc() {
   document.getElementById('cn-r-cass-area').textContent = cassArea.toFixed(3) + ' м²';
   document.getElementById('cn-r-rib-area').textContent = ribArea.toFixed(3) + ' м²';
 
+  // Группируем одинаковые листы
+  function sheetFingerprint(sh) {
+    const items = [];
+    sh.shelves.forEach(s => s.items.forEach(it => items.push(it.name+'|'+it.x+'|'+it.y+'|'+it.w+'|'+it.h)));
+    return sh.w + 'x' + sh.h + ':' + items.sort().join(';');
+  }
+  const groups = []; // [{sheet, count, indices}]
+  const fpMap = {};
+  bestSheets.forEach((sh, i) => {
+    const fp = sheetFingerprint(sh);
+    if (fpMap[fp] !== undefined) {
+      groups[fpMap[fp]].count++;
+    } else {
+      fpMap[fp] = groups.length;
+      groups.push({sheet: sh, count: 1});
+    }
+  });
+
   // Таблица листов
   const stDiv = document.getElementById('cn-r-sheets-table');
   let stHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:var(--bg);font-size:10px;font-weight:600;">'+
-    '<td style="padding:4px;">Лист</td><td style="padding:4px;">Размер</td><td style="padding:4px;">Деталей</td><td style="padding:4px;">КИМ</td></tr></thead><tbody>';
-  bestSheets.forEach((sh,i) => {
+    '<td style="padding:4px;">Тип</td><td style="padding:4px;">Размер</td><td style="padding:4px;">Деталей</td><td style="padding:4px;">КИМ</td><td style="padding:4px;">Кол-во листов</td></tr></thead><tbody>';
+  groups.forEach((g, i) => {
+    const sh = g.sheet;
     const cnt = sh.shelves.reduce((s,shelf) => s + shelf.items.length, 0);
     const sk = sh.w*sh.h > 0 ? (sh.usedArea/(sh.w*sh.h)*100).toFixed(1)+'%' : '—';
     stHtml += '<tr><td style="padding:3px 4px;">#'+(i+1)+'</td><td style="padding:3px 4px;">'+sh.w+'×'+sh.h+' мм</td>'+
-      '<td style="padding:3px 4px;">'+cnt+'</td><td style="padding:3px 4px;font-weight:600;color:var(--green);">'+sk+'</td></tr>';
+      '<td style="padding:3px 4px;">'+cnt+'</td><td style="padding:3px 4px;font-weight:600;color:var(--green);">'+sk+'</td>'+
+      '<td style="padding:3px 4px;font-weight:700;">×'+g.count+'</td></tr>';
   });
   stHtml += '</tbody></table>';
   stDiv.innerHTML = stHtml;
 
-  // Визуализация
+  // Визуализация (только уникальные)
   const visDiv = document.getElementById('cn-r-visual');
   visDiv.innerHTML = '';
-  const SCALE = 0.12;
-  bestSheets.forEach((sh, i) => {
+  const SCALE = 0.15;
+  groups.forEach((g, i) => {
+    const sh = g.sheet;
     const cw = Math.round(sh.w * SCALE);
     const ch = Math.round(sh.h * SCALE);
-    let svg = '<div style="margin-bottom:12px;"><div style="font-size:10px;font-weight:600;margin-bottom:4px;">Лист #'+(i+1)+' ('+sh.w+'×'+sh.h+' мм)</div>'+
+    let svg = '<div style="margin-bottom:14px;"><div style="font-size:11px;font-weight:600;margin-bottom:4px;">Тип #'+(i+1)+' ('+sh.w+'×'+sh.h+' мм) — <span style="color:var(--orange);">×'+g.count+' лист'+(g.count>1?'':'')+'</span></div>'+
       '<svg width="'+cw+'" height="'+ch+'" style="background:#e8ecf0;border:1px solid #ccc;border-radius:4px;">';
     sh.shelves.forEach(shelf => {
       shelf.items.forEach(it => {
         const color = it.type === 'rib' ? '#f59000' : '#1a2744';
         const x = Math.round(it.x*SCALE), y = Math.round(it.y*SCALE);
-        const w = Math.round(it.w*SCALE), h = Math.round(it.h*SCALE);
+        const w = Math.max(Math.round(it.w*SCALE), 3); // мин 3px чтобы рёбра были видны
+        const h = Math.max(Math.round(it.h*SCALE), 3);
         svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+color+'" stroke="#fff" stroke-width="0.5" rx="1"/>';
-        if (w > 30 && h > 10) {
-          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" fill="#fff" font-size="7">'+it.name+'</text>';
+        // Размеры на детали
+        const label = it.w + '×' + it.h;
+        if (w > 40 && h > 18) {
+          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2-2)+'" text-anchor="middle" fill="#fff" font-size="6" font-weight="600">'+it.name+'</text>';
+          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+7)+'" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="5.5">'+label+'</text>';
+        } else if (w > 20 && h > 10) {
+          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" fill="#fff" font-size="5">'+label+'</text>';
         }
       });
     });
