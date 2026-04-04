@@ -2848,25 +2848,30 @@ function ctNestCalc() {
       var best = null, bestUsed = 0;
       for (var ci = 0; ci < configs.length; ci++) {
         var cfg = configs[ci];
-        var aw = cfg.w - 2*m, ah = cfg.maxL - 2*m;
-        // Пробуем обе ориентации первой детали чтобы направить MaxRects
-        // Вариант 1: как есть
-        var r1 = packOnSheet(remaining, aw, ah, g);
-        var u1 = 0; r1.placed.forEach(function(it){u1+=it.ow*it.oh;});
-        // Вариант 2: первую деталь поворачиваем
-        var flipped = remaining.slice();
-        if (flipped.length > 0) {
-          var f = flipped[0];
-          flipped[0] = {name:f.name, w:f.h, h:f.w, type:f.type};
+        // Подбираем минимальную длину листа: пробуем от minL до maxL с шагом
+        var bestLenCfg = null, bestLenU = 0;
+        for (var len = cfg.minL; len <= cfg.maxL; len += (cfg.step || 500)) {
+          var aw = cfg.w - 2*m, ah = len - 2*m;
+          var r1 = packOnSheet(remaining, aw, ah, g);
+          var u1 = 0; r1.placed.forEach(function(it){u1+=it.ow*it.oh;});
+          var flipped = remaining.slice();
+          if (flipped.length > 0) {
+            var f = flipped[0];
+            flipped[0] = {name:f.name, w:f.h, h:f.w, type:f.type};
+          }
+          var r2 = packOnSheet(flipped, aw, ah, g);
+          var u2 = 0; r2.placed.forEach(function(it){u2+=it.ow*it.oh;});
+          var res = u1 >= u2 ? r1 : r2;
+          var uBest = Math.max(u1, u2);
+          if (res.placed.length > 0 && uBest > bestLenU) {
+            bestLenU = uBest;
+            bestLenCfg = {len:len, res:res};
+          }
         }
-        var r2 = packOnSheet(flipped, aw, ah, g);
-        var u2 = 0; r2.placed.forEach(function(it){u2+=it.ow*it.oh;});
-
-        var res = u1 >= u2 ? r1 : r2;
-        var uBest = Math.max(u1, u2);
-        if (res.placed.length > 0 && uBest > bestUsed) {
-          bestUsed = uBest;
-          best = {w:cfg.w, h:cfg.maxL, config:cfg, items:[], usedArea:uBest, leftover:res.leftover};
+        if (bestLenCfg && bestLenU > bestUsed) {
+          bestUsed = bestLenU;
+          var res = bestLenCfg.res;
+          best = {w:cfg.w, h:bestLenCfg.len, config:cfg, items:[], usedArea:bestLenU, leftover:res.leftover};
           res.placed.forEach(function(it) {
             best.items.push({name:it.name, x:it.x+m, y:it.y+m, w:it.w, h:it.h, type:it.type});
           });
