@@ -731,7 +731,30 @@
           </tbody>
         </table>
         </div>
-        <button onclick="ctAddRow()" style="margin-top:10px;padding:8px 20px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">+ Добавить кассету</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button onclick="ctAddRow()" style="padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">+ Добавить</button>
+          <button onclick="ctDownloadTemplate()" style="padding:8px 16px;background:var(--blue-light);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">⬇️ Шаблон</button>
+          <button onclick="document.getElementById('ct-file-input').click()" style="padding:8px 16px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">📂 Загрузить Excel</button>
+          <input type="file" id="ct-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="ctLoadExcel(this)">
+          <button onclick="ctPasteClipboard()" style="padding:8px 16px;background:var(--orange);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">📋 Вставить</button>
+          <button onclick="ctClearAll()" style="padding:8px 16px;background:var(--red);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">🗑 Очистить</button>
+        </div>
+
+        <!-- Справка -->
+        <details style="margin-top:12px;">
+          <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600;">❓ Как загрузить спецификацию?</summary>
+          <div style="font-size:11px;color:var(--text-light);margin-top:8px;line-height:1.7;background:var(--bg);padding:12px;border-radius:8px;">
+            <b>Способ 1 — Загрузить Excel:</b><br>
+            1. Нажмите <b>⬇️ Шаблон</b> — скачается готовый Excel-файл<br>
+            2. Заполните столбцы: Название, A1 (ширина), B1 (высота), Кол-во<br>
+            3. Нажмите <b>📂 Загрузить Excel</b> и выберите файл<br><br>
+            <b>Способ 2 — Вставить из Excel:</b><br>
+            1. В Excel выделите диапазон с данными (без заголовков)<br>
+            2. Скопируйте (Ctrl+C)<br>
+            3. Нажмите <b>📋 Вставить</b> в калькуляторе<br><br>
+            <b>Формат столбцов:</b> № | Название | A1 (мм) | B1 (мм) | Кол-во
+          </div>
+        </details>
 
         <div class="section-divider" style="margin-top:14px;"></div>
 
@@ -2041,6 +2064,7 @@
 </div><!-- /main -->
 </div><!-- /tab-fencing -->
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ═══════════════════════════════════════════
 // СПРАВОЧНИКИ
@@ -2246,6 +2270,120 @@ function ctDelRow(btn) {
     btn.closest('tr').remove();
     calcTypeSpec();
   }
+}
+
+// Загрузка Excel
+function ctLoadExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, {header:1});
+      ctFillFromData(data);
+    } catch(err) {
+      alert('Ошибка чтения файла: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = ''; // сброс для повторной загрузки
+}
+
+// Вставка из буфера
+function ctPasteClipboard() {
+  navigator.clipboard.readText().then(text => {
+    if (!text.trim()) { alert('Буфер обмена пуст. Скопируйте данные из Excel (Ctrl+C).'); return; }
+    const rows = text.trim().split('\n').map(r => r.split('\t'));
+    ctFillFromData(rows);
+  }).catch(() => {
+    alert('Нет доступа к буферу обмена. Разрешите доступ в браузере.');
+  });
+}
+
+// Заполнение таблицы из массива данных
+function ctFillFromData(data) {
+  const tbody = document.getElementById('ct-spec-body');
+  tbody.innerHTML = '';
+
+  // Пропускаем заголовок (если первая ячейка не число и похожа на заголовок)
+  let startRow = 0;
+  if (data.length > 1) {
+    const first = String(data[0][0] || '').trim().toLowerCase();
+    if (first === '' || first === '№' || first === '#' || first === 'n' || isNaN(Number(first))) {
+      startRow = 1;
+    }
+  }
+
+  let count = 0;
+  for (let i = startRow; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length < 3) continue;
+
+    // Определяем колонки: если 5 столбцов — №, Назв, A1, B1, Кол. Если 4 — Назв, A1, B1, Кол.
+    let name, a1, b1, qty;
+    if (row.length >= 5) {
+      name = String(row[1] || '').trim();
+      a1 = parseFloat(row[2]) || 0;
+      b1 = parseFloat(row[3]) || 0;
+      qty = parseInt(row[4]) || 1;
+    } else if (row.length >= 4) {
+      name = String(row[0] || '').trim();
+      a1 = parseFloat(row[1]) || 0;
+      b1 = parseFloat(row[2]) || 0;
+      qty = parseInt(row[3]) || 1;
+    } else {
+      name = 'Кассета';
+      a1 = parseFloat(row[0]) || 0;
+      b1 = parseFloat(row[1]) || 0;
+      qty = parseInt(row[2]) || 1;
+    }
+
+    if (a1 <= 0 || b1 <= 0) continue;
+    count++;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding:4px;color:var(--text-light);text-align:center;">${count}</td>
+      <td><input type="text" value="${name || 'Кассета '+count}" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+      <td><input type="number" value="${a1}" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+      <td><input type="number" value="${b1}" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+      <td><input type="number" value="${qty}" min="1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+      <td style="padding:4px;text-align:center;color:var(--green);font-weight:600;font-size:11px;" class="ct-dev">—</td>
+      <td style="padding:4px;text-align:center;color:var(--orange);font-weight:700;font-size:12px;" class="ct-kt">—</td>
+      <td><button onclick="ctDelRow(this)" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  if (count === 0) {
+    alert('Не найдено данных. Проверьте формат: № | Название | A1 | B1 | Кол-во');
+    ctAddRow();
+  }
+  calcTypeSpec();
+}
+
+// Скачать шаблон Excel
+function ctDownloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const data = [
+    ['№', 'Название', 'A1 (ширина, мм)', 'B1 (высота, мм)', 'Кол-во, шт'],
+    [1, 'Кассета 500×600', 500, 600, 120],
+    [2, 'Кассета 400×800', 400, 800, 85],
+    [3, 'Кассета 600×600', 600, 600, 200],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:5},{wch:25},{wch:18},{wch:18},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Спецификация');
+  XLSX.writeFile(wb, 'Шаблон_спецификации_кассет.xlsx');
+}
+
+// Очистка
+function ctClearAll() {
+  const tbody = document.getElementById('ct-spec-body');
+  tbody.innerHTML = '';
+  ctAddRow();
 }
 
 function onRibFixChange() {
