@@ -2817,38 +2817,56 @@ function ctNestCalc() {
   // Сортируем по убыванию площади
   parts.sort((a,b) => (b.w*b.h) - (a.w*a.h));
 
-  // Пробуем все 4 стратегии MaxRects и выбираем лучшую
+  // Пробуем все конфигурации и ориентации, выбираем лучший КИМ
+  function packOnSheet(partsList, aw, ah, g) {
+    var packer = new MaxRectsBP(aw, ah);
+    var placed = [], leftover = [];
+    for (var i = 0; i < partsList.length; i++) {
+      var p = partsList[i];
+      var r = packer.insert(p.w + g, p.h + g);
+      if (r) {
+        placed.push({name:p.name, x:r.x, y:r.y, w:r.width-g, h:r.height-g, type:p.type, ow:p.w, oh:p.h});
+      } else {
+        leftover.push(p);
+      }
+    }
+    return {placed:placed, leftover:leftover};
+  }
+
   function runNesting(allParts, configs, g, m) {
-    // Предварительно: для каждой конфигурации определяем лучшую ориентацию по макс деталей в ряд
     var sheets = [];
     var remaining = allParts.slice();
     while (remaining.length > 0) {
-      var bestSheet = null, bestPlaced = 0;
+      var best = null, bestUsed = 0;
       for (var ci = 0; ci < configs.length; ci++) {
         var cfg = configs[ci];
         var aw = cfg.w - 2*m, ah = cfg.maxL - 2*m;
-        var packer = new MaxRectsBP(aw, ah);
-        var placed = [], leftover = [];
-        for (var pi = 0; pi < remaining.length; pi++) {
-          var p = remaining[pi];
-          var pw = p.w + g, ph = p.h + g;
-          var r = packer.insert(pw, ph);
-          if (r) {
-            placed.push({name:p.name, x:r.x+m, y:r.y+m, w:r.width-g, h:r.height-g, type:p.type, ow:p.w, oh:p.h});
-          } else {
-            leftover.push(p);
-          }
+        // Пробуем обе ориентации первой детали чтобы направить MaxRects
+        // Вариант 1: как есть
+        var r1 = packOnSheet(remaining, aw, ah, g);
+        var u1 = 0; r1.placed.forEach(function(it){u1+=it.ow*it.oh;});
+        // Вариант 2: первую деталь поворачиваем
+        var flipped = remaining.slice();
+        if (flipped.length > 0) {
+          var f = flipped[0];
+          flipped[0] = {name:f.name, w:f.h, h:f.w, type:f.type};
         }
-        if (placed.length > bestPlaced) {
-          bestPlaced = placed.length;
-          var usedA = 0;
-          placed.forEach(function(it){usedA += it.ow * it.oh;});
-          bestSheet = {w:cfg.w, h:cfg.maxL, config:cfg, items:placed, usedArea:usedA, leftover:leftover};
+        var r2 = packOnSheet(flipped, aw, ah, g);
+        var u2 = 0; r2.placed.forEach(function(it){u2+=it.ow*it.oh;});
+
+        var res = u1 >= u2 ? r1 : r2;
+        var uBest = Math.max(u1, u2);
+        if (res.placed.length > 0 && uBest > bestUsed) {
+          bestUsed = uBest;
+          best = {w:cfg.w, h:cfg.maxL, config:cfg, items:[], usedArea:uBest, leftover:res.leftover};
+          res.placed.forEach(function(it) {
+            best.items.push({name:it.name, x:it.x+m, y:it.y+m, w:it.w, h:it.h, type:it.type});
+          });
         }
       }
-      if (!bestSheet || bestPlaced === 0) break;
-      sheets.push(bestSheet);
-      remaining = bestSheet.leftover;
+      if (!best || best.items.length === 0) break;
+      sheets.push(best);
+      remaining = best.leftover;
     }
     return sheets;
   }
