@@ -2769,7 +2769,45 @@ function ctNestCalc() {
 
   if (sheetConfigs.length === 0) { alert('Выберите хотя бы один размер листа/рулона.'); return; }
 
-  // Раскладываем по одной штуке
+  // === MaxRects Bin Packing (Jukka Jylänki / 06wj) ===
+  function MRRect(x,y,w,h){this.x=x||0;this.y=y||0;this.width=w||0;this.height=h||0;}
+  MRRect.prototype.clone=function(){return new MRRect(this.x,this.y,this.width,this.height);};
+  function MaxRectsBP(w,h){
+    this.bw=w;this.bh=h;
+    this.used=[];this.free=[new MRRect(0,0,w,h)];
+  }
+  MaxRectsBP.prototype.insert=function(w,h){
+    // BSSF с поворотом
+    var best=null,bestSS=Infinity,bestLS=Infinity;
+    for(var i=0;i<this.free.length;i++){
+      var r=this.free[i];
+      if(r.width>=w&&r.height>=h){
+        var ss=Math.min(r.width-w,r.height-h),ls=Math.max(r.width-w,r.height-h);
+        if(ss<bestSS||(ss===bestSS&&ls<bestLS)){best=new MRRect(r.x,r.y,w,h);bestSS=ss;bestLS=ls;}
+      }
+      if(r.width>=h&&r.height>=w){
+        var ss2=Math.min(r.width-h,r.height-w),ls2=Math.max(r.width-h,r.height-w);
+        if(ss2<bestSS||(ss2===bestSS&&ls2<bestLS)){best=new MRRect(r.x,r.y,h,w);bestSS=ss2;bestLS=ls2;}
+      }
+    }
+    if(!best)return null;
+    var nf=[];
+    for(var i=0;i<this.free.length;i++){
+      var f=this.free[i];
+      if(best.x>=f.x+f.width||best.x+best.width<=f.x||best.y>=f.y+f.height||best.y+best.height<=f.y){nf.push(f);continue;}
+      if(best.x>f.x)nf.push(new MRRect(f.x,f.y,best.x-f.x,f.height));
+      if(best.x+best.width<f.x+f.width)nf.push(new MRRect(best.x+best.width,f.y,f.x+f.width-best.x-best.width,f.height));
+      if(best.y>f.y)nf.push(new MRRect(f.x,f.y,f.width,best.y-f.y));
+      if(best.y+best.height<f.y+f.height)nf.push(new MRRect(f.x,best.y+best.height,f.width,f.y+f.height-best.y-best.height));
+    }
+    this.free=[];
+    for(var i=0;i<nf.length;i++){var ok=true;for(var j=0;j<nf.length;j++){if(i!==j&&nf[i].x>=nf[j].x&&nf[i].y>=nf[j].y&&nf[i].x+nf[i].width<=nf[j].x+nf[j].width&&nf[i].y+nf[i].height<=nf[j].y+nf[j].height){ok=false;break;}}if(ok)this.free.push(nf[i]);}
+    this.used.push(best);
+    return best;
+  };
+  // === End MaxRects ===
+
+  // Раскладываем детали с зазорами
   let parts = [];
   items.forEach(it => {
     for (let q = 0; q < it.qty; q++) {
@@ -2779,88 +2817,43 @@ function ctNestCalc() {
   // Сортируем по убыванию площади
   parts.sort((a,b) => (b.w*b.h) - (a.w*a.h));
 
-  // Готовим листы-кандидаты по всем конфигам
-  let bestSheets = []; // [{w, h, placed:[], usedArea}]
+  let bestSheets = []; // [{w, h, config, packer, items:[], usedArea}]
 
-  function tryPlace(sheet, part) {
-    const aw = sheet.w - 2*margin, ah = sheet.h - 2*margin;
-    // Пробуем разместить на существующих полках
-    for (let s = 0; s < sheet.shelves.length; s++) {
-      const shelf = sheet.shelves[s];
-      // Проверяем обе ориентации, выбираем лучшую
-      const canD = (shelf.x + part.w <= aw) && (shelf.h >= part.h) && (shelf.y + part.h <= ah);
-      const canR = (shelf.x + part.h <= aw) && (shelf.h >= part.w) && (shelf.y + part.w <= ah);
-      if (canD || canR) {
-        let useR = canR && !canD; // если оба можно — прямо (на полке уже выбрана ориентация)
-        const pw = useR ? part.h : part.w;
-        const ph = useR ? part.w : part.h;
-        shelf.items.push({name:part.name, x:margin+shelf.x, y:margin+shelf.y, w:pw, h:ph, type:part.type});
-        shelf.x += pw + gap;
-        sheet.usedArea += part.w * part.h;
-        return true;
-      }
-    }
-    // Новая полка — выбираем ориентацию с минимальной высотой полки
-    const lastShelf = sheet.shelves[sheet.shelves.length-1];
-    const newY = lastShelf ? lastShelf.y + lastShelf.h + gap : 0;
-    const canDirect = part.w <= aw && newY + part.h <= ah;
-    const canRotate = part.h <= aw && newY + part.w <= ah;
-    let useRotate = false;
-    if (canDirect && canRotate) {
-      // Выбираем ориентацию, при которой больше деталей влезает в ряд
-      const fitD = Math.floor((aw + gap) / (part.w + gap)); // сколько в ряд прямо
-      const fitR = Math.floor((aw + gap) / (part.h + gap)); // сколько в ряд повёрнуто
-      if (fitR > fitD) {
-        useRotate = true; // больше влезает повёрнуто
-      } else if (fitR === fitD) {
-        useRotate = part.w < part.h; // при равном — меньшая высота полки
-      }
-    } else if (canRotate) {
-      useRotate = true;
-    } else if (!canDirect) {
-      return false;
-    }
-    if (useRotate) {
-      const ns = {x: part.h + gap, y: newY, h: part.w, items:[{name:part.name, x:margin, y:margin+newY, w:part.h, h:part.w, type:part.type}]};
-      sheet.shelves.push(ns);
-    } else {
-      const ns = {x: part.w + gap, y: newY, h: part.h, items:[{name:part.name, x:margin, y:margin+newY, w:part.w, h:part.h, type:part.type}]};
-      sheet.shelves.push(ns);
-    }
-    sheet.usedArea += part.w * part.h;
-    return true;
-  }
-
-  function makeSheet(cfg, len) {
-    return {w:cfg.w, h:len, config:cfg, shelves:[], usedArea:0, placed:[]};
-  }
-
-  // Greedy: пытаемся разместить каждую деталь
   parts.forEach(part => {
+    const pw = part.w + gap, ph = part.h + gap;
     let placed = false;
     // Пробуем существующие листы
     for (let s = 0; s < bestSheets.length; s++) {
-      if (tryPlace(bestSheets[s], part)) { placed = true; break; }
-    }
-    if (!placed) {
-      // Новый лист — подбираем лучший размер
-      for (const cfg of sheetConfigs) {
-        for (let len = cfg.minL; len <= cfg.maxL; len += cfg.step || 100) {
-          const ns = makeSheet(cfg, len);
-          if (tryPlace(ns, part)) {
-            bestSheets.push(ns);
-            placed = true;
-            break;
-          }
-        }
-        if (placed) break;
+      const sh = bestSheets[s];
+      const r = sh.packer.insert(pw, ph);
+      if (r) {
+        sh.items.push({name:part.name, x:r.x+margin, y:r.y+margin, w:r.width-gap, h:r.height-gap, type:part.type});
+        sh.usedArea += part.w * part.h;
+        placed = true; break;
       }
     }
     if (!placed) {
-      // Взять максимальный лист
+      // Новый лист — пробуем максимальный по каждой конфигурации
+      for (const cfg of sheetConfigs) {
+        const aw = cfg.w - 2*margin, ah = cfg.maxL - 2*margin;
+        const packer = new MaxRectsBP(aw, ah);
+        const r = packer.insert(pw, ph);
+        if (r) {
+          const ns = {w:cfg.w, h:cfg.maxL, config:cfg, packer:packer, items:[], usedArea:0};
+          ns.items.push({name:part.name, x:r.x+margin, y:r.y+margin, w:r.width-gap, h:r.height-gap, type:part.type});
+          ns.usedArea += part.w * part.h;
+          bestSheets.push(ns);
+          placed = true; break;
+        }
+      }
+    }
+    if (!placed) {
       const cfg = sheetConfigs[sheetConfigs.length-1];
-      const ns = makeSheet(cfg, cfg.maxL);
-      tryPlace(ns, part);
+      const aw = cfg.w - 2*margin, ah = cfg.maxL - 2*margin;
+      const packer = new MaxRectsBP(aw, ah);
+      const ns = {w:cfg.w, h:cfg.maxL, config:cfg, packer:packer, items:[], usedArea:0};
+      const r = packer.insert(pw, ph);
+      if(r){ns.items.push({name:part.name,x:r.x+margin,y:r.y+margin,w:r.width-gap,h:r.height-gap,type:part.type});ns.usedArea+=part.w*part.h;}
       bestSheets.push(ns);
     }
   });
@@ -2869,9 +2862,7 @@ function ctNestCalc() {
   bestSheets.forEach(sh => {
     if (sh.config.step && sh.config.minL !== sh.config.maxL) {
       let maxY = 0;
-      sh.shelves.forEach(s => {
-        s.items.forEach(it => { maxY = Math.max(maxY, it.y + it.h + margin); });
-      });
+      sh.items.forEach(it => { maxY = Math.max(maxY, it.y + it.h + margin); });
       const step = sh.config.step;
       const trimmed = Math.max(sh.config.minL, Math.ceil(maxY / step) * step);
       sh.h = Math.min(sh.h, trimmed);
@@ -2929,7 +2920,7 @@ function ctNestCalc() {
     '<td style="padding:4px;">Тип</td><td style="padding:4px;">Размер</td><td style="padding:4px;">Деталей</td><td style="padding:4px;">КИМ</td><td style="padding:4px;">Кол-во листов</td></tr></thead><tbody>';
   groups.forEach((g, i) => {
     const sh = g.sheet;
-    const cnt = sh.shelves.reduce((s,shelf) => s + shelf.items.length, 0);
+    const cnt = sh.items.length;
     const sk = sh.w*sh.h > 0 ? (sh.usedArea/(sh.w*sh.h)*100).toFixed(1)+'%' : '—';
     stHtml += '<tr><td style="padding:3px 4px;">#'+(i+1)+'</td><td style="padding:3px 4px;">'+sh.w+'×'+sh.h+' мм</td>'+
       '<td style="padding:3px 4px;">'+cnt+'</td><td style="padding:3px 4px;font-weight:600;color:var(--green);">'+sk+'</td>'+
@@ -2948,8 +2939,7 @@ function ctNestCalc() {
     const ch = Math.round(sh.h * SCALE);
     let svg = '<div style="margin-bottom:14px;"><div style="font-size:11px;font-weight:600;margin-bottom:4px;">Тип #'+(i+1)+' ('+sh.w+'×'+sh.h+' мм) — <span style="color:var(--orange);">×'+g.count+' лист'+(g.count>1?'':'')+'</span></div>'+
       '<svg width="'+cw+'" height="'+ch+'" style="background:#e8ecf0;border:1px solid #ccc;border-radius:4px;">';
-    sh.shelves.forEach(shelf => {
-      shelf.items.forEach(it => {
+    sh.items.forEach(it => {
         const color = it.type === 'rib' ? '#f59000' : '#1a2744';
         const x = Math.round(it.x*SCALE), y = Math.round(it.y*SCALE);
         const w = Math.max(Math.round(it.w*SCALE), 6);
@@ -2963,7 +2953,6 @@ function ctNestCalc() {
         } else if (w > 20 && h > 10) {
           svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" fill="#fff" font-size="5.5">'+label+'</text>';
         }
-      });
     });
     svg += '</svg></div>';
     visDiv.innerHTML += svg;
