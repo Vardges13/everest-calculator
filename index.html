@@ -780,26 +780,11 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-header"><div class="step-num">6</div><h3>Отходная часть</h3></div>
-      <div class="card-body">
-        <div class="field-wrap">
-          <div class="field-label-row">
-            <label>Отходная часть (%)</label>
-            <span class="tip" data-tip="Процент дополнительного материала на отходы">?</span>
-          </div>
-          <input type="number" id="ct_waste" value="10" min="0" max="99" step="0.1" oninput="calcCassette()">
-        </div>
-        <div class="info-box" id="ct-coef-info">
-          Стоимость выводится на: <strong>развёртку</strong> и <strong>видимую часть</strong>
-        </div>
-      </div>
-    </div>
     </div><!-- /c-bytype-block -->
 
     <!-- ШАГ 3: Материал -->
     <div class="card">
-      <div class="card-header"><div class="step-num">3</div><h3>Материал</h3></div>
+      <div class="card-header"><div class="step-num">6</div><h3>Материал на кассеты</h3></div>
       <div class="card-body">
         <div class="field-wrap">
           <label>Вид материала</label>
@@ -850,32 +835,56 @@
 
     <!-- ШАГ 4: Рёбра (каркас) усиления -->
     <div class="card">
-      <div class="card-header"><div class="step-num">4</div><h3>Рёбра (каркас) усиления</h3></div>
+      <div class="card-header"><div class="step-num">7</div><h3>Материал на рёбра (каркас) усиления</h3></div>
       <div class="card-body">
 
         <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;font-weight:600;">Сечение ребра — П-образный профиль</div>
         <div class="field-row">
           <div>
             <label>А1 — левая полка (мм)</label>
-            <input type="number" id="c_rib_pa1" value="30" min="0" step="1" oninput="calcCassette()">
+            <input type="number" id="c_rib_pa1" value="30" min="0" step="1" oninput="calcRibSpec();calcCassette()">
           </div>
           <div>
             <label>А2 — дно (мм)</label>
-            <input type="number" id="c_rib_pa2" value="30" min="0" step="1" oninput="calcCassette()">
+            <input type="number" id="c_rib_pa2" value="30" min="0" step="1" oninput="calcRibSpec();calcCassette()">
           </div>
           <div>
             <label>А3 — правая полка (мм)</label>
-            <input type="number" id="c_rib_pa3" value="30" min="0" step="1" oninput="calcCassette()">
+            <input type="number" id="c_rib_pa3" value="30" min="0" step="1" oninput="calcRibSpec();calcCassette()">
           </div>
         </div>
         <div style="font-size:11px;color:var(--text-light);margin:4px 0 10px;">Развёртка 1 м/п: (А1+А2+А3) × 1000 мм = <strong id="c_rib_dev_info">90 × 1000 мм = 0.090 м²</strong></div>
+
+        <!-- Спецификация рёбер (только для режима "По типу") -->
+        <div id="ct-rib-spec-block" style="display:none;margin:12px 0;">
+          <div class="section-divider"></div>
+          <div style="font-size:12px;color:var(--text-light);font-weight:600;margin-bottom:8px;">Спецификация рёбер</div>
+          <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;">
+            <thead>
+              <tr style="background:var(--bg);font-weight:600;font-size:10px;text-transform:uppercase;">
+                <td style="padding:5px 4px;width:24px">#</td>
+                <td style="padding:5px 4px">Название</td>
+                <td style="padding:5px 4px;width:70px">Ширина</td>
+                <td style="padding:5px 4px;width:70px">Длина</td>
+                <td style="padding:5px 4px;width:55px">Кол-во</td>
+              </tr>
+            </thead>
+            <tbody id="ct-rib-spec-body"></tbody>
+          </table>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;">
+            <span style="color:var(--text-light);">Всего позиций: <strong id="ct-rib-total-pos">0</strong></span>
+            <span style="color:var(--text-light);">Общий м/п: <strong id="ct-rib-total-mp">0</strong></span>
+          </div>
+        </div>
 
         <div class="section-divider"></div>
 
         <div class="field-row">
           <div>
             <label>М/п рёбер на 1 м² развёртки</label>
-            <input type="number" id="c_rib_mp" value="2.2" min="0" step="0.1" oninput="calcCassette()">
+            <input type="number" id="c_rib_mp" value="2.2" min="0" step="0.1" oninput="calcRibSpec();calcCassette()">
           </div>
           <div>
             <label>Площадь материала рёбер (м²)</label>
@@ -959,9 +968,119 @@
       </div>
     </div>
 
+    <!-- ШАГ 8: Раскрой (расчёт отходной части) -->
+    <div class="card" id="c-nesting-block" style="display:none">
+      <div class="card-header" style="background:var(--green);"><div class="step-num" style="background:rgba(255,255,255,0.2);color:#fff;">8</div><h3 style="color:#fff;">Раскрой (расчёт отходной части)</h3></div>
+      <div class="card-body">
+
+        <!-- Режим раскроя -->
+        <div style="font-size:12px;color:var(--text-light);font-weight:600;margin-bottom:8px;">Режим раскроя</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <label class="radio-card active" style="flex:1;min-width:120px;">
+            <input type="radio" name="cn_mode" value="rolls" checked onchange="setCNestMode('rolls')">
+            <span>🗃 Станд. рулоны</span>
+          </label>
+          <label class="radio-card" style="flex:1;min-width:120px;">
+            <input type="radio" name="cn_mode" value="sheets" onchange="setCNestMode('sheets')">
+            <span>📋 Станд. листы</span>
+          </label>
+          <label class="radio-card" id="cn-custom-radio" style="flex:1;min-width:120px;display:none;">
+            <input type="radio" name="cn_mode" value="custom" onchange="setCNestMode('custom')">
+            <span>⚙️ Нестандарт</span>
+          </label>
+        </div>
+
+        <!-- Параметры: рулоны -->
+        <div id="cn-rolls-params">
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:6px;">Выберите ширины рулонов для раскроя:</div>
+          <div id="cn-rolls-checks" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+          <div class="field-row">
+            <div><label>Мин. длина (мм)</label><input type="number" id="cn_min_len" value="2000" min="500" max="6000" step="100"></div>
+            <div><label>Макс. длина (мм)</label><input type="number" id="cn_max_len" value="6000" min="500" max="8000" step="100"></div>
+            <div><label>Шаг (мм)</label><input type="number" id="cn_step" value="100" min="10" max="500" step="10"></div>
+          </div>
+        </div>
+
+        <!-- Параметры: листы -->
+        <div id="cn-sheets-params" style="display:none;">
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:6px;">Выберите стандартные листы:</div>
+          <div id="cn-sheets-checks" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+        </div>
+
+        <!-- Параметры: нестандарт -->
+        <div id="cn-custom-params" style="display:none;">
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:6px;">Нестандартная ширина рулона:</div>
+          <div id="cn-custom-ranges" style="margin-bottom:10px;"></div>
+          <div class="field-row">
+            <div><label>Ширина (мм)</label><input type="number" id="cn_custom_w" value="1200" min="800" max="2500" step="50"></div>
+            <div><label>Мин. длина (мм)</label><input type="number" id="cn_custom_min" value="2000" min="500" step="100"></div>
+            <div><label>Макс. длина (мм)</label><input type="number" id="cn_custom_max" value="6000" min="500" step="100"></div>
+          </div>
+        </div>
+
+        <!-- Общие параметры -->
+        <div class="field-row" style="margin-top:8px;">
+          <div><label>Зазор (мм)</label><input type="number" id="cn_gap" value="5" min="0" max="50" step="1"></div>
+          <div><label>Отступ (мм)</label><input type="number" id="cn_margin" value="10" min="0" max="50" step="1"></div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Спецификация раскроя -->
+        <div style="font-size:12px;color:var(--text-light);font-weight:600;margin-bottom:8px;">Спецификация для раскроя</div>
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;">
+          <thead>
+            <tr style="background:var(--bg);font-weight:600;font-size:10px;text-transform:uppercase;">
+              <td style="padding:5px 4px;width:24px">#</td>
+              <td style="padding:5px 4px">Название</td>
+              <td style="padding:5px 4px;width:70px">Ширина</td>
+              <td style="padding:5px 4px;width:70px">Длина</td>
+              <td style="padding:5px 4px;width:55px">Кол-во</td>
+            </tr>
+          </thead>
+          <tbody id="cn-nest-spec"></tbody>
+        </table>
+        </div>
+
+        <button onclick="ctNestCalc()" style="margin-top:12px;padding:10px 28px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;width:100%;">📐 Рассчитать раскрой</button>
+
+        <!-- Результаты -->
+        <div id="cn-results" style="display:none;margin-top:12px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">
+            <div style="background:var(--green-bg);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">КИМ</div>
+              <div style="font-size:22px;font-weight:800;color:var(--green);" id="cn-r-kim">—</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">Отход</div>
+              <div style="font-size:22px;font-weight:800;color:var(--red);" id="cn-r-waste">—</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">Листов</div>
+              <div style="font-size:22px;font-weight:800;" id="cn-r-sheets">—</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">Площадь кассет</div>
+              <div style="font-size:14px;font-weight:700;" id="cn-r-cass-area">—</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">Площадь рёбер</div>
+              <div style="font-size:14px;font-weight:700;" id="cn-r-rib-area">—</div>
+            </div>
+          </div>
+          <div style="font-weight:700;font-size:12px;margin:12px 0 6px;text-transform:uppercase;">Раскладка по листам:</div>
+          <div id="cn-r-sheets-table"></div>
+          <div style="font-weight:700;font-size:12px;margin:12px 0 6px;text-transform:uppercase;">Карта раскроя:</div>
+          <div id="cn-r-visual" style="overflow-x:auto;"></div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ШАГ 5: Покрытие -->
     <div class="card">
-      <div class="card-header"><div class="step-num">5</div><h3>Покрытие</h3></div>
+      <div class="card-header"><div class="step-num">9</div><h3>Покрытие</h3></div>
       <div class="card-body">
         <div class="cover-select-wrap">
           <label>Вид покрытия</label>
@@ -1069,7 +1188,7 @@
 
     <!-- ШАГ 6: КИТ -->
     <div class="card">
-      <div class="card-header"><div class="step-num">6</div><h3>КИТ — Конструкторская и технологическая разработка</h3></div>
+      <div class="card-header"><div class="step-num">10</div><h3>КИТ — Конструкторская и технологическая разработка</h3></div>
       <div class="card-body">
         <div class="info-box">Привязана к <strong>продаваемой единице</strong> (1 м² по выбранной единице измерения).</div>
         <div class="field-wrap">
@@ -1081,7 +1200,7 @@
 
     <!-- ШАГ 7: Работы -->
     <div class="card">
-      <div class="card-header"><div class="step-num">7</div><h3>Стоимость работ</h3></div>
+      <div class="card-header"><div class="step-num">11</div><h3>Стоимость работ</h3></div>
       <div class="card-body">
         <div class="field-row">
           <div>
@@ -2151,6 +2270,7 @@ function onCMaterialChange() {
   const mat = MATERIALS[document.getElementById('c_material').value];
   document.getElementById('c_density').textContent = mat.density.toFixed(2);
   document.getElementById('c_price_kg').value = mat.price;
+  if (cMethod === 'bytype') updateNestParams();
   calcCassette();
 }
 
@@ -2207,6 +2327,23 @@ function calcCPerf() {
 // КАССЕТЫ — МЕТОДИКА РАСЧЁТА
 // ═══════════════════════════════════════════
 let cMethod = 'approx'; // 'approx' | 'bytype'
+let ctWastePercent = 10; // % отходов (обновляется раскроем)
+let cNestMode = 'rolls'; // 'sheets' | 'rolls' | 'custom'
+
+const MATERIAL_SIZES = {
+  al:    { rolls:[1200,1500,2000], sheets:[[1200,3000],[1500,3000],[1500,4000],[2000,4000],[2000,5000],[2000,6000]], custom:[{min:800,max:1500,step:50,label:'до 1500мм'},{min:800,max:2500,step:50,label:'до 2500мм'}] },
+  al_srb:{ rolls:[1200,1500], sheets:[[1200,3000],[1500,3000],[1500,4000]], custom:[{min:800,max:1600,step:50,label:'до 1600мм'}] },
+  zinc:  { rolls:[1250,1500], sheets:[[1250,2500]] },
+  st3:   { rolls:[1250,1500], sheets:[[1250,2500],[1500,3000],[1500,6000]] },
+  n304s: { rolls:[1250,1500], sheets:[[1250,2500],[1500,3000],[1500,6000]] },
+  n304z: { rolls:[1250,1500], sheets:[[1250,2500],[1500,3000],[1500,6000]] },
+  n430s: { rolls:[1250,1500], sheets:[[1250,2500],[1500,3000],[1500,6000]] },
+  n430z: { rolls:[1250,1500], sheets:[[1250,2500],[1500,3000],[1500,6000]] },
+  n_rip: { rolls:[1250,1500], sheets:[[1250,2500],[1500,3000],[1500,6000]] },
+  copper:{ rolls:[600,710,1000], sheets:[[600,1500],[710,2000],[1000,2000]] },
+  brass: { rolls:[600,710,1000], sheets:[[600,1500],[710,2000],[1000,2000]] },
+  corten:{ rolls:[1250,1400], sheets:[[1250,2500],[1400,3000]] }
+};
 
 function setCMethod(method) {
   cMethod = method;
@@ -2215,7 +2352,8 @@ function setCMethod(method) {
   });
   document.getElementById('c-approx-block').style.display = method === 'approx' ? '' : 'none';
   document.getElementById('c-bytype-block').style.display = method === 'bytype' ? '' : 'none';
-  if (method === 'bytype') calcTypeKt();
+  document.getElementById('c-nesting-block').style.display = method === 'bytype' ? '' : 'none';
+  if (method === 'bytype') { calcTypeSpec(); updateNestParams(); }
   calcCassette();
 }
 
@@ -2263,6 +2401,7 @@ function calcTypeSpec() {
   document.getElementById('ct_avg_kt').textContent = avgKt.toFixed(3);
   document.getElementById('ct_total_qty').textContent = totalQty;
 
+  calcRibSpec();
   calcCassette();
 }
 
@@ -2423,6 +2562,381 @@ function ctClearAll() {
   ctAddRow();
 }
 
+// Спецификация рёбер (режим "По типу")
+function calcRibSpec() {
+  const block = document.getElementById('ct-rib-spec-block');
+  if (cMethod !== 'bytype') { block.style.display='none'; return; }
+  block.style.display = '';
+
+  const ribMpPerM2 = parseFloat(document.getElementById('c_rib_mp').value) || 0;
+  const ribPA1 = parseFloat(document.getElementById('c_rib_pa1').value) || 0;
+  const ribPA2 = parseFloat(document.getElementById('c_rib_pa2').value) || 0;
+  const ribPA3 = parseFloat(document.getElementById('c_rib_pa3').value) || 0;
+  const ribW = ribPA1 + ribPA2 + ribPA3;
+
+  const a2 = parseFloat(document.getElementById('ct_a2').value) || 0;
+  const a3 = parseFloat(document.getElementById('ct_a3').value) || 0;
+  const b2 = parseFloat(document.getElementById('ct_b2').value) || 0;
+  const b3 = parseFloat(document.getElementById('ct_b3').value) || 0;
+  const b4 = parseFloat(document.getElementById('ct_b4').value) || 0;
+
+  const rows = document.querySelectorAll('#ct-spec-body tr');
+  const tbody = document.getElementById('ct-rib-spec-body');
+  tbody.innerHTML = '';
+  let pos = 0, totalMp = 0;
+
+  rows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value || ('Кассета '+(i+1));
+    const a1 = parseFloat(inputs[1].value) || 0;
+    const b1 = parseFloat(inputs[2].value) || 0;
+    const qty = parseInt(inputs[3].value) || 0;
+    if (a1 <= 0 || b1 <= 0 || qty <= 0) return;
+
+    const devW = a2 + a1 + a3;
+    const devH = b4 + b3 + b1 + b2;
+    const devArea = devW * devH / 1000000;
+    const ribMp = devArea * ribMpPerM2;
+    const fullRibs = Math.floor(ribMp);
+    const remainder = Math.round((ribMp - fullRibs) * 1000);
+
+    let subIdx = 1;
+    if (fullRibs > 0) {
+      pos++;
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td style="padding:3px 4px;color:var(--text-light);text-align:center;">'+ pos +'</td>'+
+        '<td style="padding:3px 4px;">Ребро '+(i+1)+'.'+subIdx+'</td>'+
+        '<td style="padding:3px 4px;text-align:center;">'+ribW+'</td>'+
+        '<td style="padding:3px 4px;text-align:center;">1000</td>'+
+        '<td style="padding:3px 4px;text-align:center;font-weight:600;">'+(fullRibs*qty)+'</td>';
+      tbody.appendChild(tr);
+      totalMp += fullRibs * qty * 1;
+      subIdx++;
+    }
+    if (remainder > 0) {
+      pos++;
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td style="padding:3px 4px;color:var(--text-light);text-align:center;">'+ pos +'</td>'+
+        '<td style="padding:3px 4px;">Ребро '+(i+1)+'.'+subIdx+'</td>'+
+        '<td style="padding:3px 4px;text-align:center;">'+ribW+'</td>'+
+        '<td style="padding:3px 4px;text-align:center;">'+remainder+'</td>'+
+        '<td style="padding:3px 4px;text-align:center;font-weight:600;">'+(1*qty)+'</td>';
+      tbody.appendChild(tr);
+      totalMp += qty * remainder / 1000;
+    }
+  });
+
+  document.getElementById('ct-rib-total-pos').textContent = pos;
+  document.getElementById('ct-rib-total-mp').textContent = totalMp.toFixed(1) + ' м/п';
+}
+
+// РАСКРОЙ В КАЛЬКУЛЯТОРЕ КАССЕТ
+function setCNestMode(mode) {
+  cNestMode = mode;
+  document.querySelectorAll('[name=cn_mode]').forEach(r => {
+    r.closest('.radio-card').classList.toggle('active', r.value === mode);
+  });
+  document.getElementById('cn-rolls-params').style.display = mode === 'rolls' ? '' : 'none';
+  document.getElementById('cn-sheets-params').style.display = mode === 'sheets' ? '' : 'none';
+  document.getElementById('cn-custom-params').style.display = mode === 'custom' ? '' : 'none';
+}
+
+function updateNestParams() {
+  const matKey = document.getElementById('c_material').value;
+  const sizes = MATERIAL_SIZES[matKey] || MATERIAL_SIZES['st3'];
+
+  // Рулоны — чекбоксы
+  const rollsDiv = document.getElementById('cn-rolls-checks');
+  rollsDiv.innerHTML = '';
+  sizes.rolls.forEach(w => {
+    rollsDiv.innerHTML += '<label style="display:flex;align-items:center;gap:4px;font-size:12px;">'+
+      '<input type="checkbox" checked value="'+w+'"> '+w+' мм</label>';
+  });
+
+  // Листы — чекбоксы
+  const sheetsDiv = document.getElementById('cn-sheets-checks');
+  sheetsDiv.innerHTML = '';
+  sizes.sheets.forEach(s => {
+    sheetsDiv.innerHTML += '<label style="display:flex;align-items:center;gap:4px;font-size:12px;">'+
+      '<input type="checkbox" checked value="'+s[0]+'x'+s[1]+'"> '+s[0]+'×'+s[1]+' мм</label>';
+  });
+
+  // Нестандарт — только для al и al_srb
+  const customRadio = document.getElementById('cn-custom-radio');
+  if (sizes.custom) {
+    customRadio.style.display = '';
+    const rangesDiv = document.getElementById('cn-custom-ranges');
+    rangesDiv.innerHTML = '';
+    sizes.custom.forEach(c => {
+      rangesDiv.innerHTML += '<div style="font-size:11px;color:var(--text-light);margin-bottom:4px;">'+
+        'Диапазон: '+c.min+'–'+c.max+' мм (шаг '+c.step+') — '+c.label+'</div>';
+    });
+    const maxW = sizes.custom[sizes.custom.length-1].max;
+    document.getElementById('cn_custom_w').max = maxW;
+  } else {
+    customRadio.style.display = 'none';
+    if (cNestMode === 'custom') setCNestMode('rolls');
+  }
+}
+
+function buildNestSpec() {
+  const tbody = document.getElementById('cn-nest-spec');
+  tbody.innerHTML = '';
+  const items = [];
+  let pos = 0;
+
+  // Полки
+  const a2 = parseFloat(document.getElementById('ct_a2').value) || 0;
+  const a3 = parseFloat(document.getElementById('ct_a3').value) || 0;
+  const b2 = parseFloat(document.getElementById('ct_b2').value) || 0;
+  const b3 = parseFloat(document.getElementById('ct_b3').value) || 0;
+  const b4 = parseFloat(document.getElementById('ct_b4').value) || 0;
+
+  // Кассеты
+  const cassRows = document.querySelectorAll('#ct-spec-body tr');
+  cassRows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value || ('Кассета '+(i+1));
+    const a1 = parseFloat(inputs[1].value) || 0;
+    const b1 = parseFloat(inputs[2].value) || 0;
+    const qty = parseInt(inputs[3].value) || 0;
+    if (a1 <= 0 || b1 <= 0 || qty <= 0) return;
+    const devW = a2 + a1 + a3;
+    const devH = b4 + b3 + b1 + b2;
+    pos++;
+    items.push({name: name, w: devW, h: devH, qty: qty, type:'cass'});
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td style="padding:3px 4px;color:var(--text-light);text-align:center;">'+pos+'</td>'+
+      '<td style="padding:3px 4px;">'+name+'</td>'+
+      '<td style="padding:3px 4px;text-align:center;">'+devW+'</td>'+
+      '<td style="padding:3px 4px;text-align:center;">'+devH+'</td>'+
+      '<td style="padding:3px 4px;text-align:center;font-weight:600;">'+qty+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Рёбра
+  const ribRows = document.querySelectorAll('#ct-rib-spec-body tr');
+  ribRows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 5) return;
+    const name = cells[1].textContent;
+    const w = parseInt(cells[2].textContent) || 0;
+    const h = parseInt(cells[3].textContent) || 0;
+    const qty = parseInt(cells[4].textContent) || 0;
+    if (w <= 0 || h <= 0 || qty <= 0) return;
+    pos++;
+    items.push({name: name, w: w, h: h, qty: qty, type:'rib'});
+    const tr = document.createElement('tr');
+    tr.style.background = 'rgba(245,144,0,0.05)';
+    tr.innerHTML = '<td style="padding:3px 4px;color:var(--text-light);text-align:center;">'+pos+'</td>'+
+      '<td style="padding:3px 4px;color:var(--orange);">'+name+'</td>'+
+      '<td style="padding:3px 4px;text-align:center;">'+w+'</td>'+
+      '<td style="padding:3px 4px;text-align:center;">'+h+'</td>'+
+      '<td style="padding:3px 4px;text-align:center;font-weight:600;">'+qty+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  return items;
+}
+
+function ctNestCalc() {
+  const items = buildNestSpec();
+  if (items.length === 0) { alert('Нет деталей для раскроя. Заполните спецификацию кассет.'); return; }
+
+  // Собираем параметры листов
+  let sheetConfigs = []; // [{w, minL, maxL, step}]
+  const gap = parseInt(document.getElementById('cn_gap').value) || 5;
+  const margin = parseInt(document.getElementById('cn_margin').value) || 10;
+
+  if (cNestMode === 'sheets') {
+    document.querySelectorAll('#cn-sheets-checks input:checked').forEach(cb => {
+      const [sw, sl] = cb.value.split('x').map(Number);
+      sheetConfigs.push({w:sw, minL:sl, maxL:sl, step:sl}); // фиксированный размер
+    });
+  } else if (cNestMode === 'rolls') {
+    const minL = parseInt(document.getElementById('cn_min_len').value) || 2000;
+    const maxL = parseInt(document.getElementById('cn_max_len').value) || 6000;
+    const step = parseInt(document.getElementById('cn_step').value) || 100;
+    document.querySelectorAll('#cn-rolls-checks input:checked').forEach(cb => {
+      sheetConfigs.push({w:parseInt(cb.value), minL, maxL, step});
+    });
+  } else { // custom
+    const cw = parseInt(document.getElementById('cn_custom_w').value) || 1200;
+    const minL = parseInt(document.getElementById('cn_custom_min').value) || 2000;
+    const maxL = parseInt(document.getElementById('cn_custom_max').value) || 6000;
+    sheetConfigs.push({w:cw, minL, maxL, step:100});
+  }
+
+  if (sheetConfigs.length === 0) { alert('Выберите хотя бы один размер листа/рулона.'); return; }
+
+  // Раскладываем по одной штуке
+  let parts = [];
+  items.forEach(it => {
+    for (let q = 0; q < it.qty; q++) {
+      parts.push({name:it.name, w:it.w, h:it.h, type:it.type});
+    }
+  });
+  // Сортируем по убыванию площади
+  parts.sort((a,b) => (b.w*b.h) - (a.w*a.h));
+
+  // Готовим листы-кандидаты по всем конфигам
+  let bestSheets = []; // [{w, h, placed:[], usedArea}]
+
+  function tryPlace(sheet, part) {
+    // Пробуем shelf-алгоритм с поворотом
+    const pw = part.w + gap, ph = part.h + gap;
+    const pw2 = part.h + gap, ph2 = part.w + gap;
+    const aw = sheet.w - 2*margin, ah = sheet.h - 2*margin;
+    // Простое размещение на shelves
+    for (let s = 0; s < sheet.shelves.length; s++) {
+      const shelf = sheet.shelves[s];
+      // Прямо
+      if (shelf.x + pw - gap <= aw && shelf.h >= part.h && shelf.y + part.h <= ah) {
+        shelf.items.push({name:part.name, x:margin+shelf.x, y:margin+shelf.y, w:part.w, h:part.h, type:part.type});
+        shelf.x += pw;
+        sheet.usedArea += part.w * part.h;
+        return true;
+      }
+      // Поворот
+      if (shelf.x + ph2 - gap <= aw && shelf.h >= part.w && shelf.y + part.w <= ah) {
+        shelf.items.push({name:part.name, x:margin+shelf.x, y:margin+shelf.y, w:part.h, h:part.w, type:part.type});
+        shelf.x += ph2;
+        sheet.usedArea += part.w * part.h;
+        return true;
+      }
+    }
+    // Новая полка
+    const lastShelf = sheet.shelves[sheet.shelves.length-1];
+    const newY = lastShelf ? lastShelf.y + lastShelf.h + gap : 0;
+    // Прямо
+    if (part.w <= aw && newY + part.h <= ah) {
+      const ns = {x: part.w + gap, y: newY, h: part.h, items:[{name:part.name, x:margin, y:margin+newY, w:part.w, h:part.h, type:part.type}]};
+      sheet.shelves.push(ns);
+      sheet.usedArea += part.w * part.h;
+      return true;
+    }
+    // Поворот
+    if (part.h <= aw && newY + part.w <= ah) {
+      const ns = {x: part.h + gap, y: newY, h: part.w, items:[{name:part.name, x:margin, y:margin+newY, w:part.h, h:part.w, type:part.type}]};
+      sheet.shelves.push(ns);
+      sheet.usedArea += part.w * part.h;
+      return true;
+    }
+    return false;
+  }
+
+  function makeSheet(cfg, len) {
+    return {w:cfg.w, h:len, config:cfg, shelves:[], usedArea:0, placed:[]};
+  }
+
+  // Greedy: пытаемся разместить каждую деталь
+  parts.forEach(part => {
+    let placed = false;
+    // Пробуем существующие листы
+    for (let s = 0; s < bestSheets.length; s++) {
+      if (tryPlace(bestSheets[s], part)) { placed = true; break; }
+    }
+    if (!placed) {
+      // Новый лист — подбираем лучший размер
+      for (const cfg of sheetConfigs) {
+        for (let len = cfg.minL; len <= cfg.maxL; len += cfg.step || 100) {
+          const ns = makeSheet(cfg, len);
+          if (tryPlace(ns, part)) {
+            bestSheets.push(ns);
+            placed = true;
+            break;
+          }
+        }
+        if (placed) break;
+      }
+    }
+    if (!placed) {
+      // Взять максимальный лист
+      const cfg = sheetConfigs[sheetConfigs.length-1];
+      const ns = makeSheet(cfg, cfg.maxL);
+      tryPlace(ns, part);
+      bestSheets.push(ns);
+    }
+  });
+
+  // Оптимизируем длину листов (обрезаем до фактической)
+  bestSheets.forEach(sh => {
+    if (sh.config.step && sh.config.minL !== sh.config.maxL) {
+      let maxY = 0;
+      sh.shelves.forEach(s => {
+        s.items.forEach(it => { maxY = Math.max(maxY, it.y + it.h + margin); });
+      });
+      const step = sh.config.step;
+      const trimmed = Math.max(sh.config.minL, Math.ceil(maxY / step) * step);
+      sh.h = Math.min(sh.h, trimmed);
+    }
+  });
+
+  // Статистика
+  let totalSheetArea = 0, totalUsed = 0, cassArea = 0, ribArea = 0;
+  bestSheets.forEach(sh => {
+    totalSheetArea += sh.w * sh.h;
+    totalUsed += sh.usedArea;
+  });
+  items.forEach(it => {
+    const area = it.w * it.h * it.qty / 1000000;
+    if (it.type === 'cass') cassArea += area;
+    else ribArea += area;
+  });
+
+  const kim = totalSheetArea > 0 ? (totalUsed / totalSheetArea * 100) : 0;
+  const wasteP = 100 - kim;
+
+  // Обновляем ctWastePercent и пересчитываем
+  ctWastePercent = Math.round(wasteP * 10) / 10;
+  calcCassette();
+
+  // Вывод
+  document.getElementById('cn-results').style.display = '';
+  document.getElementById('cn-r-kim').textContent = kim.toFixed(1) + '%';
+  document.getElementById('cn-r-waste').textContent = wasteP.toFixed(1) + '%';
+  document.getElementById('cn-r-sheets').textContent = bestSheets.length;
+  document.getElementById('cn-r-cass-area').textContent = cassArea.toFixed(3) + ' м²';
+  document.getElementById('cn-r-rib-area').textContent = ribArea.toFixed(3) + ' м²';
+
+  // Таблица листов
+  const stDiv = document.getElementById('cn-r-sheets-table');
+  let stHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:var(--bg);font-size:10px;font-weight:600;">'+
+    '<td style="padding:4px;">Лист</td><td style="padding:4px;">Размер</td><td style="padding:4px;">Деталей</td><td style="padding:4px;">КИМ</td></tr></thead><tbody>';
+  bestSheets.forEach((sh,i) => {
+    const cnt = sh.shelves.reduce((s,shelf) => s + shelf.items.length, 0);
+    const sk = sh.w*sh.h > 0 ? (sh.usedArea/(sh.w*sh.h)*100).toFixed(1)+'%' : '—';
+    stHtml += '<tr><td style="padding:3px 4px;">#'+(i+1)+'</td><td style="padding:3px 4px;">'+sh.w+'×'+sh.h+' мм</td>'+
+      '<td style="padding:3px 4px;">'+cnt+'</td><td style="padding:3px 4px;font-weight:600;color:var(--green);">'+sk+'</td></tr>';
+  });
+  stHtml += '</tbody></table>';
+  stDiv.innerHTML = stHtml;
+
+  // Визуализация
+  const visDiv = document.getElementById('cn-r-visual');
+  visDiv.innerHTML = '';
+  const SCALE = 0.12;
+  bestSheets.forEach((sh, i) => {
+    const cw = Math.round(sh.w * SCALE);
+    const ch = Math.round(sh.h * SCALE);
+    let svg = '<div style="margin-bottom:12px;"><div style="font-size:10px;font-weight:600;margin-bottom:4px;">Лист #'+(i+1)+' ('+sh.w+'×'+sh.h+' мм)</div>'+
+      '<svg width="'+cw+'" height="'+ch+'" style="background:#e8ecf0;border:1px solid #ccc;border-radius:4px;">';
+    sh.shelves.forEach(shelf => {
+      shelf.items.forEach(it => {
+        const color = it.type === 'rib' ? '#f59000' : '#1a2744';
+        const x = Math.round(it.x*SCALE), y = Math.round(it.y*SCALE);
+        const w = Math.round(it.w*SCALE), h = Math.round(it.h*SCALE);
+        svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+color+'" stroke="#fff" stroke-width="0.5" rx="1"/>';
+        if (w > 30 && h > 10) {
+          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" fill="#fff" font-size="7">'+it.name+'</text>';
+        }
+      });
+    });
+    svg += '</svg></div>';
+    visDiv.innerHTML += svg;
+  });
+}
+
 function onRibFixChange() {
   const fix = document.getElementById('c_rib_fix').value;
   document.getElementById('c_rib_stud_block').style.display = fix === 'stud' ? '' : 'none';
@@ -2442,7 +2956,7 @@ function calcCassette() {
   const priceKg= parseFloat(document.getElementById('c_price_kg').value) || 0;
   let waste, coefTr;
   if (cMethod === 'bytype') {
-    waste = parseFloat(document.getElementById('ct_waste').value) || 0;
+    waste = ctWastePercent;
     coefTr = 1; // базовый расчёт на развёртку
   } else {
     waste = parseFloat(document.getElementById('c_waste').value) || 0;
@@ -3345,6 +3859,7 @@ window.addEventListener('DOMContentLoaded', () => {
   onMMaterialChange();
   onRibFixChange();
   calcTypeSpec();
+  updateNestParams();
   calcCassette();
   calcMK();
   nestUpdatePrice();
