@@ -655,75 +655,110 @@
       </div>
     </div>
 
-    <!-- Чертёж + размеры -->
+    <!-- Чертёж -->
     <div class="card">
-      <div class="card-header"><div class="step-num">3</div><h3>Размеры изделия</h3></div>
+      <div class="card-header"><div class="step-num">3</div><h3>Чертёж</h3></div>
       <div class="card-body" style="padding:0;">
-        <img src="img/kasseta-hidden.jpg" alt="Кассета скрытого монтажа" style="width:100%;border-radius:8px 8px 0 0;">
+        <img src="img/kasseta-hidden.jpg" alt="Кассета скрытого монтажа" style="width:100%;border-radius:8px;">
       </div>
+    </div>
+
+    <!-- Полки (общие для всех кассет) -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">4</div><h3>Полки гибов (общие)</h3></div>
       <div class="card-body">
-        <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">A1×B1 — видимая часть. Полки: A2, A3, B2, B3, B4 — гибы. Развёртка = (A2+A1+A3) × (B4+B3+B1+B2)</div>
-        <div class="field-row">
-          <div>
-            <label>A1 — ширина (мм)</label>
-            <input type="number" id="ct_a1" value="500" min="50" step="1" oninput="calcTypeKt()">
-          </div>
-          <div>
-            <label>B1 — высота (мм)</label>
-            <input type="number" id="ct_b1" value="600" min="50" step="1" oninput="calcTypeKt()">
-          </div>
-        </div>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">Полки применяются ко всем кассетам в спецификации</div>
         <div class="field-row">
           <div>
             <label>A2 — левая полка (мм)</label>
-            <input type="number" id="ct_a2" value="30" min="0" step="1" oninput="calcTypeKt()">
+            <input type="number" id="ct_a2" value="30" min="0" step="1" oninput="calcTypeSpec()">
           </div>
           <div>
             <label>A3 — правая полка (мм)</label>
-            <input type="number" id="ct_a3" value="30" min="0" step="1" oninput="calcTypeKt()">
+            <input type="number" id="ct_a3" value="30" min="0" step="1" oninput="calcTypeSpec()">
           </div>
         </div>
         <div class="field-row">
           <div>
             <label>B2 — нижняя полка (мм)</label>
-            <input type="number" id="ct_b2" value="30" min="0" step="1" oninput="calcTypeKt()">
+            <input type="number" id="ct_b2" value="30" min="0" step="1" oninput="calcTypeSpec()">
           </div>
           <div>
             <label>B3 — верхняя полка (мм)</label>
-            <input type="number" id="ct_b3" value="35" min="0" step="1" oninput="calcTypeKt()">
+            <input type="number" id="ct_b3" value="35" min="0" step="1" oninput="calcTypeSpec()">
           </div>
         </div>
         <div class="field-row">
           <div>
             <label>B4 — кромка верхняя (мм)</label>
-            <input type="number" id="ct_b4" value="20" min="0" step="1" oninput="calcTypeKt()">
+            <input type="number" id="ct_b4" value="20" min="0" step="1" oninput="calcTypeSpec()">
           </div>
           <div></div>
         </div>
+      </div>
+    </div>
 
-        <div class="section-divider"></div>
+    <!-- Спецификация кассет -->
+    <div class="card">
+      <div class="card-header"><div class="step-num">5</div><h3>Спецификация кассет</h3></div>
+      <div class="card-body">
+        <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;">Введите видимые размеры (A1×B1) и количество. Развёртка и Кт рассчитываются автоматически.</div>
+        <div style="overflow-x:auto;">
+        <table id="ct-spec-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px;">
+          <thead>
+            <tr style="background:var(--bg);font-weight:600;font-size:10px;text-transform:uppercase;">
+              <td style="padding:6px 4px;width:24px">#</td>
+              <td style="padding:6px 4px">Название</td>
+              <td style="padding:6px 4px;width:75px">A1 (мм)</td>
+              <td style="padding:6px 4px;width:75px">B1 (мм)</td>
+              <td style="padding:6px 4px;width:55px">Кол-во</td>
+              <td style="padding:6px 4px;width:90px">Развёртка</td>
+              <td style="padding:6px 4px;width:50px">Кт</td>
+              <td style="padding:6px 4px;width:30px"></td>
+            </tr>
+          </thead>
+          <tbody id="ct-spec-body">
+            <tr>
+              <td style="padding:4px;color:var(--text-light);text-align:center;">1</td>
+              <td><input type="text" value="Кассета 1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+              <td><input type="number" value="500" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+              <td><input type="number" value="600" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+              <td><input type="number" value="1" min="1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+              <td style="padding:4px;text-align:center;color:var(--green);font-weight:600;font-size:11px;" class="ct-dev">560×685</td>
+              <td style="padding:4px;text-align:center;color:var(--orange);font-weight:700;font-size:12px;" class="ct-kt">1.279</td>
+              <td><button onclick="ctDelRow(this)" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <button onclick="ctAddRow()" style="margin-top:10px;padding:8px 20px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">+ Добавить кассету</button>
 
-        <div style="display:flex;gap:16px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:140px;">
-            <div style="font-size:11px;color:var(--text-light);">Развёртка</div>
-            <div style="font-size:18px;font-weight:700;color:var(--green);" id="ct_develop_size">560 × 685 мм</div>
-            <div style="font-size:11px;color:var(--text-light);" id="ct_develop_area">0.3836 м²</div>
+        <div class="section-divider" style="margin-top:14px;"></div>
+
+        <!-- Итоги спецификации -->
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;">
+          <div style="flex:1;min-width:140px;background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">Общая видимая</div>
+            <div style="font-size:18px;font-weight:700;color:var(--blue);" id="ct_total_vis">0.300 м²</div>
           </div>
-          <div style="flex:1;min-width:140px;">
-            <div style="font-size:11px;color:var(--text-light);">Видимая часть</div>
-            <div style="font-size:18px;font-weight:700;color:var(--blue);" id="ct_visible_size">500 × 600 мм</div>
-            <div style="font-size:11px;color:var(--text-light);" id="ct_visible_area">0.3000 м²</div>
+          <div style="flex:1;min-width:140px;background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">Общая развёртка</div>
+            <div style="font-size:18px;font-weight:700;color:var(--green);" id="ct_total_dev">0.384 м²</div>
           </div>
-          <div style="flex:1;min-width:140px;">
-            <div style="font-size:11px;color:var(--text-light);">Коэфф. трансформации</div>
-            <div style="font-size:24px;font-weight:700;color:var(--orange);" id="ct_kt">1.279</div>
+          <div style="flex:1;min-width:140px;background:var(--orange);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.7);text-transform:uppercase;">Средний Кт</div>
+            <div style="font-size:24px;font-weight:800;color:#fff;" id="ct_avg_kt">1.279</div>
+          </div>
+          <div style="flex:1;min-width:100px;background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;">Всего шт.</div>
+            <div style="font-size:18px;font-weight:700;" id="ct_total_qty">1</div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="step-num">4</div><h3>Отходная часть</h3></div>
+      <div class="card-header"><div class="step-num">6</div><h3>Отходная часть</h3></div>
       <div class="card-body">
         <div class="field-wrap">
           <div class="field-label-row">
@@ -2141,32 +2176,76 @@ function setCMethod(method) {
 }
 
 function onCTypeChange() {
-  calcTypeKt();
+  calcTypeSpec();
   calcCassette();
 }
 
-function calcTypeKt() {
-  const a1 = parseFloat(document.getElementById('ct_a1').value) || 0;
+function calcTypeSpec() {
   const a2 = parseFloat(document.getElementById('ct_a2').value) || 0;
   const a3 = parseFloat(document.getElementById('ct_a3').value) || 0;
-  const b1 = parseFloat(document.getElementById('ct_b1').value) || 0;
   const b2 = parseFloat(document.getElementById('ct_b2').value) || 0;
   const b3 = parseFloat(document.getElementById('ct_b3').value) || 0;
   const b4 = parseFloat(document.getElementById('ct_b4').value) || 0;
 
-  const devW = a2 + a1 + a3;
-  const devH = b4 + b3 + b1 + b2;
-  const devArea = devW * devH / 1000000; // м²
-  const visArea = a1 * b1 / 1000000;     // м²
-  const kt = visArea > 0 ? devArea / visArea : 0;
+  const rows = document.querySelectorAll('#ct-spec-body tr');
+  let totalVis = 0, totalDev = 0, totalQty = 0;
 
-  document.getElementById('ct_develop_size').textContent = devW + ' × ' + devH + ' мм';
-  document.getElementById('ct_develop_area').textContent = devArea.toFixed(4) + ' м²';
-  document.getElementById('ct_visible_size').textContent = a1 + ' × ' + b1 + ' мм';
-  document.getElementById('ct_visible_area').textContent = visArea.toFixed(4) + ' м²';
-  document.getElementById('ct_kt').textContent = kt.toFixed(3);
+  rows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input');
+    const a1 = parseFloat(inputs[1].value) || 0;
+    const b1 = parseFloat(inputs[2].value) || 0;
+    const qty = parseInt(inputs[3].value) || 0;
+
+    const devW = a2 + a1 + a3;
+    const devH = b4 + b3 + b1 + b2;
+    const devArea = devW * devH / 1000000;
+    const visArea = a1 * b1 / 1000000;
+    const kt = visArea > 0 ? devArea / visArea : 0;
+
+    // Обновляем ячейки
+    row.querySelector('.ct-dev').textContent = devW + '×' + devH;
+    row.querySelector('.ct-kt').textContent = kt.toFixed(3);
+    row.querySelector('td').textContent = i + 1;
+
+    totalVis += visArea * qty;
+    totalDev += devArea * qty;
+    totalQty += qty;
+  });
+
+  const avgKt = totalVis > 0 ? totalDev / totalVis : 0;
+
+  document.getElementById('ct_total_vis').textContent = totalVis.toFixed(3) + ' м²';
+  document.getElementById('ct_total_dev').textContent = totalDev.toFixed(3) + ' м²';
+  document.getElementById('ct_avg_kt').textContent = avgKt.toFixed(3);
+  document.getElementById('ct_total_qty').textContent = totalQty;
 
   calcCassette();
+}
+
+function ctAddRow() {
+  const tbody = document.getElementById('ct-spec-body');
+  const n = tbody.rows.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="padding:4px;color:var(--text-light);text-align:center;">${n}</td>
+    <td><input type="text" value="Кассета ${n}" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+    <td><input type="number" value="500" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+    <td><input type="number" value="600" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+    <td><input type="number" value="1" min="1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td>
+    <td style="padding:4px;text-align:center;color:var(--green);font-weight:600;font-size:11px;" class="ct-dev">—</td>
+    <td style="padding:4px;text-align:center;color:var(--orange);font-weight:700;font-size:12px;" class="ct-kt">—</td>
+    <td><button onclick="ctDelRow(this)" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  calcTypeSpec();
+}
+
+function ctDelRow(btn) {
+  const tbody = document.getElementById('ct-spec-body');
+  if (tbody.rows.length > 1) {
+    btn.closest('tr').remove();
+    calcTypeSpec();
+  }
 }
 
 function onRibFixChange() {
@@ -2188,7 +2267,6 @@ function calcCassette() {
   const priceKg= parseFloat(document.getElementById('c_price_kg').value) || 0;
   let waste, coefTr;
   if (cMethod === 'bytype') {
-    // Режим "По типу": Kt из размеров, стоимость на развёртку (как develop)
     waste = parseFloat(document.getElementById('ct_waste').value) || 0;
     coefTr = 1; // базовый расчёт на развёртку
   } else {
@@ -2440,7 +2518,7 @@ function calcCassette() {
   // Блок "По типу" — стоимость за видимую часть
   const bytypeExtra = document.getElementById('r-c-bytype-extra');
   if (cMethod === 'bytype') {
-    const kt = parseFloat(document.getElementById('ct_kt').textContent) || 1;
+    const kt = parseFloat(document.getElementById('ct_avg_kt').textContent) || 1;
     const visTotal = total * kt;
     const visFinal = finalPrice * kt;
     bytypeExtra.style.display = '';
@@ -3084,7 +3162,7 @@ window.addEventListener('DOMContentLoaded', () => {
   onCMaterialChange();
   onMMaterialChange();
   onRibFixChange();
-  calcTypeKt();
+  calcTypeSpec();
   calcCassette();
   calcMK();
   nestUpdatePrice();
