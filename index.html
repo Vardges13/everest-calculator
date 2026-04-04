@@ -2777,17 +2777,25 @@ function ctNestCalc() {
     this.used=[];this.free=[new MRRect(0,0,w,h)];
   }
   MaxRectsBP.prototype.insert=function(w,h){
-    // BottomLeft: минимизируем Y (высоту), затем X — предпочитает ориентацию с меньшей высотой
-    var best=null,bestY=Infinity,bestX=Infinity;
+    // Кастомная эвристика: максимизируем кол-во в ряд по ширине, затем мин Y
+    var best=null,bestFitW=-1,bestY=Infinity,bestX=Infinity;
     for(var i=0;i<this.free.length;i++){
       var r=this.free[i];
+      // Прямо
       if(r.width>=w&&r.height>=h){
+        var fitW=Math.floor(r.width/w); // сколько влезет в ряд
         var ty=r.y+h;
-        if(ty<bestY||(ty===bestY&&r.x<bestX)){best=new MRRect(r.x,r.y,w,h);bestY=ty;bestX=r.x;}
+        if(fitW>bestFitW||(fitW===bestFitW&&(ty<bestY||(ty===bestY&&r.x<bestX)))){
+          best=new MRRect(r.x,r.y,w,h);bestFitW=fitW;bestY=ty;bestX=r.x;
+        }
       }
+      // Поворот
       if(r.width>=h&&r.height>=w){
+        var fitW2=Math.floor(r.width/h);
         var ty2=r.y+w;
-        if(ty2<bestY||(ty2===bestY&&r.x<bestX)){best=new MRRect(r.x,r.y,h,w);bestY=ty2;bestX=r.x;}
+        if(fitW2>bestFitW||(fitW2===bestFitW&&(ty2<bestY||(ty2===bestY&&r.x<bestX)))){
+          best=new MRRect(r.x,r.y,h,w);bestFitW=fitW2;bestY=ty2;bestX=r.x;
+        }
       }
     }
     if(!best)return null;
