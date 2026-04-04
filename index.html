@@ -2956,9 +2956,6 @@ function ctNestCalc() {
           svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+8)+'" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="6">'+label+'</text>';
         } else if (w > 20 && h > 10) {
           svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" fill="#fff" font-size="5.5">'+label+'</text>';
-        } else {
-          // Мелкая деталь (ребро) — подпись справа
-          svg += '<text x="'+(x+w+3)+'" y="'+(y+h/2+3)+'" fill="'+color+'" font-size="5.5" font-weight="600">'+it.name+' '+label+'</text>';
         }
       });
     });
