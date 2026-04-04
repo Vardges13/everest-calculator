@@ -2783,24 +2783,19 @@ function ctNestCalc() {
   let bestSheets = []; // [{w, h, placed:[], usedArea}]
 
   function tryPlace(sheet, part) {
-    // Пробуем shelf-алгоритм с поворотом
-    const pw = part.w + gap, ph = part.h + gap;
-    const pw2 = part.h + gap, ph2 = part.w + gap;
     const aw = sheet.w - 2*margin, ah = sheet.h - 2*margin;
-    // Простое размещение на shelves
+    // Пробуем разместить на существующих полках
     for (let s = 0; s < sheet.shelves.length; s++) {
       const shelf = sheet.shelves[s];
-      // Прямо
-      if (shelf.x + pw - gap <= aw && shelf.h >= part.h && shelf.y + part.h <= ah) {
-        shelf.items.push({name:part.name, x:margin+shelf.x, y:margin+shelf.y, w:part.w, h:part.h, type:part.type});
-        shelf.x += pw;
-        sheet.usedArea += part.w * part.h;
-        return true;
-      }
-      // Поворот
-      if (shelf.x + ph2 - gap <= aw && shelf.h >= part.w && shelf.y + part.w <= ah) {
-        shelf.items.push({name:part.name, x:margin+shelf.x, y:margin+shelf.y, w:part.h, h:part.w, type:part.type});
-        shelf.x += ph2;
+      // Проверяем обе ориентации, выбираем лучшую
+      const canD = (shelf.x + part.w <= aw) && (shelf.h >= part.h) && (shelf.y + part.h <= ah);
+      const canR = (shelf.x + part.h <= aw) && (shelf.h >= part.w) && (shelf.y + part.w <= ah);
+      if (canD || canR) {
+        let useR = canR && (!canD || part.h < part.w); // предпочитаем меньшую высоту
+        const pw = useR ? part.h : part.w;
+        const ph = useR ? part.w : part.h;
+        shelf.items.push({name:part.name, x:margin+shelf.x, y:margin+shelf.y, w:pw, h:ph, type:part.type});
+        shelf.x += pw + gap;
         sheet.usedArea += part.w * part.h;
         return true;
       }
