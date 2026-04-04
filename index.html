@@ -2366,17 +2366,34 @@ function ctFillFromData(data) {
 
 // Скачать шаблон Excel
 function ctDownloadTemplate() {
-  const wb = XLSX.utils.book_new();
-  const data = [
-    ['№', 'Название', 'A1 (ширина, мм)', 'B1 (высота, мм)', 'Кол-во, шт'],
-    [1, 'Кассета 500×600', 500, 600, 120],
-    [2, 'Кассета 400×800', 400, 800, 85],
-    [3, 'Кассета 600×600', 600, 600, 200],
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{wch:5},{wch:25},{wch:18},{wch:18},{wch:14}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Спецификация');
-  XLSX.writeFile(wb, 'Шаблон_спецификации_кассет.xlsx');
+  try {
+    if (typeof XLSX === 'undefined') {
+      alert('Библиотека ещё загружается, попробуйте через пару секунд');
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    const data = [
+      ['№', 'Название', 'A1 (ширина, мм)', 'B1 (высота, мм)', 'Кол-во, шт'],
+      [1, 'Кассета 500×600', 500, 600, 120],
+      [2, 'Кассета 400×800', 400, 800, 85],
+      [3, 'Кассета 600×600', 600, 600, 200],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch:5},{wch:25},{wch:18},{wch:18},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Спецификация');
+    const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const blob = new Blob([wbout], {type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Шаблон_спецификации_кассет.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(err) {
+    alert('Ошибка создания шаблона: ' + err.message);
+  }
 }
 
 // Очистка
