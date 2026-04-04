@@ -2817,46 +2817,43 @@ function ctNestCalc() {
   // Сортируем по убыванию площади
   parts.sort((a,b) => (b.w*b.h) - (a.w*a.h));
 
-  let bestSheets = []; // [{w, h, config, packer, items:[], usedArea}]
-
-  parts.forEach(part => {
-    const pw = part.w + gap, ph = part.h + gap;
-    let placed = false;
-    // Пробуем существующие листы
-    for (let s = 0; s < bestSheets.length; s++) {
-      const sh = bestSheets[s];
-      const r = sh.packer.insert(pw, ph);
-      if (r) {
-        sh.items.push({name:part.name, x:r.x+margin, y:r.y+margin, w:r.width-gap, h:r.height-gap, type:part.type});
-        sh.usedArea += part.w * part.h;
-        placed = true; break;
-      }
-    }
-    if (!placed) {
-      // Новый лист — пробуем максимальный по каждой конфигурации
-      for (const cfg of sheetConfigs) {
-        const aw = cfg.w - 2*margin, ah = cfg.maxL - 2*margin;
-        const packer = new MaxRectsBP(aw, ah);
-        const r = packer.insert(pw, ph);
-        if (r) {
-          const ns = {w:cfg.w, h:cfg.maxL, config:cfg, packer:packer, items:[], usedArea:0};
-          ns.items.push({name:part.name, x:r.x+margin, y:r.y+margin, w:r.width-gap, h:r.height-gap, type:part.type});
-          ns.usedArea += part.w * part.h;
-          bestSheets.push(ns);
-          placed = true; break;
+  // Пробуем все 4 стратегии MaxRects и выбираем лучшую
+  function runNesting(allParts, configs, g, m) {
+    // Предварительно: для каждой конфигурации определяем лучшую ориентацию по макс деталей в ряд
+    var sheets = [];
+    var remaining = allParts.slice();
+    while (remaining.length > 0) {
+      var bestSheet = null, bestPlaced = 0;
+      for (var ci = 0; ci < configs.length; ci++) {
+        var cfg = configs[ci];
+        var aw = cfg.w - 2*m, ah = cfg.maxL - 2*m;
+        var packer = new MaxRectsBP(aw, ah);
+        var placed = [], leftover = [];
+        for (var pi = 0; pi < remaining.length; pi++) {
+          var p = remaining[pi];
+          var pw = p.w + g, ph = p.h + g;
+          var r = packer.insert(pw, ph);
+          if (r) {
+            placed.push({name:p.name, x:r.x+m, y:r.y+m, w:r.width-g, h:r.height-g, type:p.type, ow:p.w, oh:p.h});
+          } else {
+            leftover.push(p);
+          }
+        }
+        if (placed.length > bestPlaced) {
+          bestPlaced = placed.length;
+          var usedA = 0;
+          placed.forEach(function(it){usedA += it.ow * it.oh;});
+          bestSheet = {w:cfg.w, h:cfg.maxL, config:cfg, items:placed, usedArea:usedA, leftover:leftover};
         }
       }
+      if (!bestSheet || bestPlaced === 0) break;
+      sheets.push(bestSheet);
+      remaining = bestSheet.leftover;
     }
-    if (!placed) {
-      const cfg = sheetConfigs[sheetConfigs.length-1];
-      const aw = cfg.w - 2*margin, ah = cfg.maxL - 2*margin;
-      const packer = new MaxRectsBP(aw, ah);
-      const ns = {w:cfg.w, h:cfg.maxL, config:cfg, packer:packer, items:[], usedArea:0};
-      const r = packer.insert(pw, ph);
-      if(r){ns.items.push({name:part.name,x:r.x+margin,y:r.y+margin,w:r.width-gap,h:r.height-gap,type:part.type});ns.usedArea+=part.w*part.h;}
-      bestSheets.push(ns);
-    }
-  });
+    return sheets;
+  }
+
+  var bestSheets = runNesting(parts, sheetConfigs, gap, margin);
 
   // Оптимизируем длину листов (обрезаем до фактической)
   bestSheets.forEach(sh => {
