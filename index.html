@@ -2813,7 +2813,7 @@ function ctNestCalc() {
     // Предпочитаем ориентацию с меньшей высотой
     let useRotate = false;
     if (canDirect && canRotate) {
-      useRotate = part.w > part.h; // поворачиваем если высота больше ширины (ребро 90×1000 → 1000×90)
+      useRotate = part.h > part.w; // поворачиваем если высота > ширины (ребро 90×1000 → 1000×90)
     } else if (canRotate) {
       useRotate = true;
     } else if (!canDirect) {
