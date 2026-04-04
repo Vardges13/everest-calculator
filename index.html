@@ -2946,16 +2946,19 @@ function ctNestCalc() {
       shelf.items.forEach(it => {
         const color = it.type === 'rib' ? '#f59000' : '#1a2744';
         const x = Math.round(it.x*SCALE), y = Math.round(it.y*SCALE);
-        const w = Math.max(Math.round(it.w*SCALE), 3); // мин 3px чтобы рёбра были видны
-        const h = Math.max(Math.round(it.h*SCALE), 3);
+        const w = Math.max(Math.round(it.w*SCALE), 6);
+        const h = Math.max(Math.round(it.h*SCALE), 6);
         svg += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+color+'" stroke="#fff" stroke-width="0.5" rx="1"/>';
-        // Размеры на детали
         const label = it.w + '×' + it.h;
         if (w > 40 && h > 18) {
-          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2-2)+'" text-anchor="middle" fill="#fff" font-size="6" font-weight="600">'+it.name+'</text>';
-          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+7)+'" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="5.5">'+label+'</text>';
+          // Крупная деталь — название + размеры внутри
+          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2-2)+'" text-anchor="middle" fill="#fff" font-size="7" font-weight="600">'+it.name+'</text>';
+          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+8)+'" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="6">'+label+'</text>';
         } else if (w > 20 && h > 10) {
-          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" fill="#fff" font-size="5">'+label+'</text>';
+          svg += '<text x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" fill="#fff" font-size="5.5">'+label+'</text>';
+        } else {
+          // Мелкая деталь (ребро) — подпись справа
+          svg += '<text x="'+(x+w+3)+'" y="'+(y+h/2+3)+'" fill="'+color+'" font-size="5.5" font-weight="600">'+it.name+' '+label+'</text>';
         }
       });
     });
