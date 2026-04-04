@@ -2791,7 +2791,7 @@ function ctNestCalc() {
       const canD = (shelf.x + part.w <= aw) && (shelf.h >= part.h) && (shelf.y + part.h <= ah);
       const canR = (shelf.x + part.h <= aw) && (shelf.h >= part.w) && (shelf.y + part.w <= ah);
       if (canD || canR) {
-        let useR = canR && (!canD || part.h < part.w); // предпочитаем меньшую высоту
+        let useR = canR && !canD; // если оба можно — прямо (на полке уже выбрана ориентация)
         const pw = useR ? part.h : part.w;
         const ph = useR ? part.w : part.h;
         shelf.items.push({name:part.name, x:margin+shelf.x, y:margin+shelf.y, w:pw, h:ph, type:part.type});
@@ -2805,10 +2805,16 @@ function ctNestCalc() {
     const newY = lastShelf ? lastShelf.y + lastShelf.h + gap : 0;
     const canDirect = part.w <= aw && newY + part.h <= ah;
     const canRotate = part.h <= aw && newY + part.w <= ah;
-    // Предпочитаем ориентацию с меньшей высотой
     let useRotate = false;
     if (canDirect && canRotate) {
-      useRotate = part.h > part.w; // поворачиваем если высота > ширины (ребро 90×1000 → 1000×90)
+      // Выбираем ориентацию, при которой больше деталей влезает в ряд
+      const fitD = Math.floor((aw + gap) / (part.w + gap)); // сколько в ряд прямо
+      const fitR = Math.floor((aw + gap) / (part.h + gap)); // сколько в ряд повёрнуто
+      if (fitR > fitD) {
+        useRotate = true; // больше влезает повёрнуто
+      } else if (fitR === fitD) {
+        useRotate = part.w < part.h; // при равном — меньшая высота полки
+      }
     } else if (canRotate) {
       useRotate = true;
     } else if (!canDirect) {
