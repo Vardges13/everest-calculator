@@ -2899,7 +2899,7 @@ function ctNestCalc() {
   // Группируем одинаковые листы
   function sheetFingerprint(sh) {
     const items = [];
-    sh.shelves.forEach(s => s.items.forEach(it => items.push(it.name+'|'+it.x+'|'+it.y+'|'+it.w+'|'+it.h)));
+    sh.items.forEach(it => items.push(it.name+'|'+it.x+'|'+it.y+'|'+it.w+'|'+it.h));
     return sh.w + 'x' + sh.h + ':' + items.sort().join(';');
   }
   const groups = []; // [{sheet, count, indices}]
