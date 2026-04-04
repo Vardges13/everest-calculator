@@ -2805,24 +2805,29 @@ function ctNestCalc() {
         return true;
       }
     }
-    // Новая полка
+    // Новая полка — выбираем ориентацию с минимальной высотой полки
     const lastShelf = sheet.shelves[sheet.shelves.length-1];
     const newY = lastShelf ? lastShelf.y + lastShelf.h + gap : 0;
-    // Прямо
-    if (part.w <= aw && newY + part.h <= ah) {
-      const ns = {x: part.w + gap, y: newY, h: part.h, items:[{name:part.name, x:margin, y:margin+newY, w:part.w, h:part.h, type:part.type}]};
-      sheet.shelves.push(ns);
-      sheet.usedArea += part.w * part.h;
-      return true;
+    const canDirect = part.w <= aw && newY + part.h <= ah;
+    const canRotate = part.h <= aw && newY + part.w <= ah;
+    // Предпочитаем ориентацию с меньшей высотой
+    let useRotate = false;
+    if (canDirect && canRotate) {
+      useRotate = part.w > part.h; // поворачиваем если высота больше ширины (ребро 90×1000 → 1000×90)
+    } else if (canRotate) {
+      useRotate = true;
+    } else if (!canDirect) {
+      return false;
     }
-    // Поворот
-    if (part.h <= aw && newY + part.w <= ah) {
+    if (useRotate) {
       const ns = {x: part.h + gap, y: newY, h: part.w, items:[{name:part.name, x:margin, y:margin+newY, w:part.h, h:part.w, type:part.type}]};
       sheet.shelves.push(ns);
-      sheet.usedArea += part.w * part.h;
-      return true;
+    } else {
+      const ns = {x: part.w + gap, y: newY, h: part.h, items:[{name:part.name, x:margin, y:margin+newY, w:part.w, h:part.h, type:part.type}]};
+      sheet.shelves.push(ns);
     }
-    return false;
+    sheet.usedArea += part.w * part.h;
+    return true;
   }
 
   function makeSheet(cfg, len) {
