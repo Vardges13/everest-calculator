@@ -2554,7 +2554,9 @@ function calcRibSpec() {
   const ribPA1 = parseFloat(document.getElementById('c_rib_pa1').value) || 0;
   const ribPA2 = parseFloat(document.getElementById('c_rib_pa2').value) || 0;
   const ribPA3 = parseFloat(document.getElementById('c_rib_pa3').value) || 0;
-  const ribW = ribPA1 + ribPA2 + ribPA3;
+  // Развёртка ребра с учётом растяжения
+  const thick = parseFloat(document.getElementById('c_thick').value) || 0;
+  const ribW = ribPA1 + ribPA2 + ribPA3 - 2 * 2 * thick;
 
   const a2 = parseFloat(document.getElementById('ct_a2').value) || 0;
   const a3 = parseFloat(document.getElementById('ct_a3').value) || 0;
@@ -3062,7 +3064,9 @@ function calcCassette() {
   const ribPA1 = parseFloat(document.getElementById('c_rib_pa1').value) || 0;
   const ribPA2 = parseFloat(document.getElementById('c_rib_pa2').value) || 0;
   const ribPA3 = parseFloat(document.getElementById('c_rib_pa3').value) || 0;
-  const ribDevWidth = ribPA1 + ribPA2 + ribPA3; // мм
+  // Развёртка ребра с учётом растяжения: 3 полки = 2 гиба, вычет 2×2×толщина
+  const ribBends = 2; // П-профиль: всегда 2 гиба
+  const ribDevWidth = ribPA1 + ribPA2 + ribPA3 - ribBends * 2 * thick; // мм
   const ribAreaConst = ribDevWidth / 1000; // м² материала на 1 м/п ребра
   const ribAreaPerM2 = ribMpPerM2 * ribAreaConst;
   // Обновляем инфо
