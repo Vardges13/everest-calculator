@@ -1379,43 +1379,20 @@
           </div>
         </div>
 
-        <div class="result-total">
-          <div class="label">Стоимость</div>
-          <div class="value" id="r-c-total">4 601 ₽/м²</div>
-        </div>
-
-        <!-- Стоимость за развёртку (доп., мелко) -->
-        <div class="result-develop-hint" id="r-c-develop-hint" style="display:none">
-          за развёртку: <span id="r-c-total-develop">—</span>
-        </div>
-
         <input type="hidden" id="c_markup" value="0">
 
+        <!-- Итоговый блок 1 (основной) -->
         <div class="result-final">
-          <div class="label">Итого (с НДС 22%)</div>
-          <div class="value" id="r-c-final">5 521 ₽</div>
+          <div class="label" id="r-c-final-label-1">Стоимость (по развёртке) с НДС</div>
+          <div class="value" id="r-c-final-1">—</div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);padding:4px 4px 0">
-          <span>Без НДС: <span id="r-c-final-no-vat">—</span></span>
-          <span>в т.ч. НДС: <span id="r-c-final-vat">—</span></span>
-        </div>
-        <div class="result-develop-hint" id="r-c-final-develop-hint" style="display:none">
-          с наценкой за развёртку: <span id="r-c-final-develop">—</span>
-        </div>
-        <!-- Блок "По типу" — стоимость за видимую часть -->
-        <div id="r-c-bytype-extra" style="display:none;margin-top:8px;padding:10px;background:rgba(255,255,255,0.08);border-radius:6px;">
-          <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px;">за 1 м² видимой части</div>
-          <div style="display:flex;justify-content:space-between;">
-            <span style="font-size:12px;color:rgba(255,255,255,0.7);">Стоимость</span>
-            <span style="font-size:14px;font-weight:700;color:#f59000;" id="r-c-bytype-vis-total">—</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-top:4px;">
-            <span style="font-size:12px;color:rgba(255,255,255,0.7);">С НДС 22%</span>
-            <span style="font-size:14px;font-weight:700;color:#fff;" id="r-c-bytype-vis-final">—</span>
-          </div>
+        <!-- Итоговый блок 2 (доп., для видимой/проекции) -->
+        <div class="result-final" id="r-c-final-block-2" style="display:none">
+          <div class="label" id="r-c-final-label-2">—</div>
+          <div class="value" id="r-c-final-2">—</div>
         </div>
 
-        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px">за 1 м² · <span id="r-c-unit-bot">развёртка</span></div>
+        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px">за 1 м²</div>
       </div>
     </div>
   </div>
@@ -2258,7 +2235,7 @@ function setCUnit(unit) {
 
   const labels = { develop: 'развёртка', visible: 'видимая', projection: 'проекция' };
   document.getElementById('c-unit-label').textContent = labels[unit];
-  document.getElementById('r-c-unit-bot').textContent = labels[unit];
+  // unit label обновляется в calcCassette()
 
   calcCassette();
 }
@@ -3238,42 +3215,34 @@ function calcCassette() {
   document.getElementById('r-c-bar-work-lbl').textContent = workPct + '%';
 
   // Итог
-  document.getElementById('r-c-total').textContent    = fmtR(total) + ' ₽/м²';
-  document.getElementById('r-c-final').textContent    = fmtR(finalPrice) + ' ₽';
-  // НДС 22% — цена уже включает НДС
-  const cVat = finalPrice * 22 / 122;
-  const cNoVat = finalPrice - cVat;
-  document.getElementById('r-c-final-vat').textContent    = fmtR(cVat);
-  document.getElementById('r-c-final-no-vat').textContent = fmtR(cNoVat);
+  // ── ИТОГОВЫЕ БЛОКИ ──
+  const block1 = document.getElementById('r-c-final-1');
+  const block2 = document.getElementById('r-c-final-block-2');
+  const label1 = document.getElementById('r-c-final-label-1');
+  const label2 = document.getElementById('r-c-final-label-2');
+  const value2 = document.getElementById('r-c-final-2');
 
-  // Доп. стоимость за развёртку (если выбрана не развёртка)
-  const developHint      = document.getElementById('r-c-develop-hint');
-  const finalDevelopHint = document.getElementById('r-c-final-develop-hint');
-  if (cUnit !== 'develop' && coefTr && coefTr !== 1) {
-    const totalDevelop = total / coefTr;
-    const finalDevelop = finalPrice / coefTr;
-    developHint.style.display      = '';
-    finalDevelopHint.style.display = '';
-    document.getElementById('r-c-total-develop').textContent = fmtR(totalDevelop) + ' ₽/м² (развёртка)';
-    document.getElementById('r-c-final-develop').textContent = fmtR(finalDevelop) + ' ₽/м² (развёртка)';
-  } else {
-    developHint.style.display      = 'none';
-    finalDevelopHint.style.display = 'none';
-  }
+  const unitLabels = { develop: 'развёртке', visible: 'видимой', projection: 'проекции' };
 
-  // Блок "По типу" — стоимость за видимую часть
-  const bytypeExtra = document.getElementById('r-c-bytype-extra');
   if (cMethod === 'bytype') {
     const kt = parseFloat(document.getElementById('ct_avg_kt').textContent) || 1;
-    const visTotal = total * kt;
     const visFinal = finalPrice * kt;
-    bytypeExtra.style.display = '';
-    document.getElementById('r-c-bytype-vis-total').textContent = fmtR(visTotal) + ' ₽/м²';
-    document.getElementById('r-c-bytype-vis-final').textContent = fmtR(visFinal) + ' ₽/м²';
-    // Обновляем метку внизу
-    document.getElementById('r-c-unit-bot').textContent = 'развёртка';
+    label1.textContent = 'Стоимость (по ' + unitLabels.develop + ') с НДС';
+    block1.textContent = fmtR(finalPrice) + ' ₽/м²';
+    label2.textContent = 'Стоимость (по ' + unitLabels.visible + ') с НДС';
+    value2.textContent = fmtR(visFinal) + ' ₽/м²';
+    block2.style.display = '';
+  } else if (cUnit === 'develop') {
+    label1.textContent = 'Стоимость (по ' + unitLabels.develop + ') с НДС';
+    block1.textContent = fmtR(finalPrice) + ' ₽/м²';
+    block2.style.display = 'none';
   } else {
-    bytypeExtra.style.display = 'none';
+    const developFinal = finalPrice / coefTr;
+    label1.textContent = 'Стоимость (по ' + unitLabels.develop + ') с НДС';
+    block1.textContent = fmtR(developFinal) + ' ₽/м²';
+    label2.textContent = 'Стоимость (по ' + unitLabels[cUnit] + ') с НДС';
+    value2.textContent = fmtR(finalPrice) + ' ₽/м²';
+    block2.style.display = '';
   }
 }
 
