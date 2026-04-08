@@ -382,7 +382,35 @@
     margin-top: 3px;
     color: rgba(255,255,255,0.7);
   }
-  /* Доп. стоимость за развёртку (мелко) */
+  /* COLLAPSIBLE */
+  .collapse-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .collapse-toggle:hover { background: #e2e6f0; }
+  .collapse-toggle .arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+    font-size: 10px;
+    color: var(--text-light);
+    margin-right: 8px;
+  }
+  .collapse-toggle.collapsed .arrow { transform: rotate(-90deg); }
+  .collapse-toggle .summary { color: var(--text-light); font-weight: 400; font-size: 11px; margin-left: 8px; }
+  .collapse-body { transition: max-height 0.3s ease; overflow: hidden; }
+  .collapse-body.hidden { max-height: 0 !important; }
+
   .result-develop-hint {
     font-size: 10px;
     color: rgba(255,255,255,0.45);
@@ -703,6 +731,12 @@
       <div class="card-header"><div class="step-num">5</div><h3>Спецификация кассет</h3></div>
       <div class="card-body">
         <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;">Введите видимые размеры (A1×B1) и количество. Развёртка и Кт рассчитываются автоматически.</div>
+
+        <div id="cass-spec-toggle" class="collapse-toggle" onclick="toggleCollapse('cass-spec')">
+          <span><span class="arrow">▼</span> Таблица кассет</span>
+          <span class="summary" id="cass-spec-summary"></span>
+        </div>
+        <div id="cass-spec-body" class="collapse-body">
         <div style="overflow-x:auto;">
         <table id="ct-spec-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px;">
           <thead>
@@ -755,6 +789,7 @@
             <b>Формат столбцов:</b> № | Название | A1 (мм) | B1 (мм) | Кол-во
           </div>
         </details>
+        </div><!-- /cass-spec-body -->
 
         <div class="section-divider" style="margin-top:14px;"></div>
 
@@ -858,7 +893,11 @@
         <!-- Спецификация рёбер (только для режима "По типу") -->
         <div id="ct-rib-spec-block" style="display:none;margin:12px 0;">
           <div class="section-divider"></div>
-          <div style="font-size:12px;color:var(--text-light);font-weight:600;margin-bottom:8px;">Спецификация рёбер</div>
+          <div id="rib-spec-toggle" class="collapse-toggle" onclick="toggleCollapse('rib-spec')">
+            <span><span class="arrow">▼</span> Спецификация рёбер</span>
+            <span class="summary">поз: <span id="ct-rib-total-pos2">0</span> | м/п: <span id="ct-rib-total-mp2">0</span></span>
+          </div>
+          <div id="rib-spec-body" class="collapse-body">
           <div style="overflow-x:auto;">
           <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;">
             <thead>
@@ -873,6 +912,7 @@
             <tbody id="ct-rib-spec-body"></tbody>
           </table>
           </div>
+          </div><!-- /rib-spec-body -->
           <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;">
             <span style="color:var(--text-light);">Всего позиций: <strong id="ct-rib-total-pos">0</strong></span>
             <span style="color:var(--text-light);">Общий м/п: <strong id="ct-rib-total-mp">0</strong></span>
@@ -1027,7 +1067,11 @@
         <div class="section-divider"></div>
 
         <!-- Спецификация раскроя -->
-        <div style="font-size:12px;color:var(--text-light);font-weight:600;margin-bottom:8px;">Спецификация для раскроя</div>
+        <div id="nest-spec-toggle" class="collapse-toggle" onclick="toggleCollapse('nest-spec')">
+          <span><span class="arrow">▼</span> Спецификация для раскроя</span>
+          <span class="summary" id="nest-spec-summary"></span>
+        </div>
+        <div id="nest-spec-body" class="collapse-body">
         <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;">
           <thead>
@@ -1042,6 +1086,7 @@
           <tbody id="cn-nest-spec"></tbody>
         </table>
         </div>
+        </div><!-- /nest-spec-body -->
 
         <button onclick="ctNestCalc()" style="margin-top:12px;padding:10px 28px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;width:100%;">📐 Рассчитать раскрой</button>
 
@@ -1069,10 +1114,21 @@
               <div style="font-size:14px;font-weight:700;" id="cn-r-rib-area">—</div>
             </div>
           </div>
-          <div style="font-weight:700;font-size:12px;margin:12px 0 6px;text-transform:uppercase;">Раскладка по листам:</div>
+          <div id="nest-layout-toggle" class="collapse-toggle" onclick="toggleCollapse('nest-layout')">
+            <span><span class="arrow">▼</span> Раскладка по листам</span>
+            <span class="summary" id="nest-layout-summary"></span>
+          </div>
+          <div id="nest-layout-body" class="collapse-body">
           <div id="cn-r-sheets-table"></div>
-          <div style="font-weight:700;font-size:12px;margin:12px 0 6px;text-transform:uppercase;">Карта раскроя:</div>
+          </div><!-- /nest-layout-body -->
+
+          <div id="nest-maps-toggle" class="collapse-toggle" onclick="toggleCollapse('nest-maps')">
+            <span><span class="arrow">▼</span> Карты раскроя</span>
+            <span class="summary" id="nest-maps-summary"></span>
+          </div>
+          <div id="nest-maps-body" class="collapse-body">
           <div id="cn-r-visual" style="overflow-x:auto;"></div>
+          </div><!-- /nest-maps-body -->
         </div>
 
       </div>
@@ -2382,6 +2438,8 @@ function calcTypeSpec() {
   document.getElementById('ct_total_dev').textContent = totalDev.toFixed(3) + ' м²';
   document.getElementById('ct_avg_kt').textContent = avgKt.toFixed(3);
   document.getElementById('ct_total_qty').textContent = totalQty;
+  const cassSum = document.getElementById('cass-spec-summary');
+  if (cassSum) cassSum.textContent = totalQty + ' шт | ' + totalDev.toFixed(3) + ' м² разв.';
 
   calcRibSpec();
   calcCassette();
@@ -2615,6 +2673,10 @@ function calcRibSpec() {
 
   document.getElementById('ct-rib-total-pos').textContent = pos;
   document.getElementById('ct-rib-total-mp').textContent = totalMp.toFixed(1) + ' м/п';
+  const ribPos2 = document.getElementById('ct-rib-total-pos2');
+  if (ribPos2) ribPos2.textContent = pos;
+  const ribMp2 = document.getElementById('ct-rib-total-mp2');
+  if (ribMp2) ribMp2.textContent = totalMp.toFixed(1) + ' м/п';
 }
 
 // РАСКРОЙ В КАЛЬКУЛЯТОРЕ КАССЕТ
@@ -2915,6 +2977,12 @@ function ctNestCalc() {
   document.getElementById('cn-r-cass-area').textContent = cassArea.toFixed(3) + ' м²';
   document.getElementById('cn-r-rib-area').textContent = ribArea.toFixed(3) + ' м²';
 
+  // Update collapse summaries
+  const el1 = document.getElementById('nest-layout-summary');
+  if (el1) el1.textContent = bestSheets.length + ' листов';
+  const el2 = document.getElementById('nest-maps-summary');
+  if (el2) el2.textContent = bestSheets.length + ' карт';
+
   // Группируем одинаковые листы
   function sheetFingerprint(sh) {
     const items = [];
@@ -2991,6 +3059,28 @@ function onRibFixChange() {
 // ═══════════════════════════════════════════
 // КАССЕТЫ — ГЛАВНЫЙ РАСЧЁТ
 // ═══════════════════════════════════════════
+// COLLAPSIBLE TOGGLE
+function toggleCollapse(id) {
+  const body = document.getElementById(id + '-body');
+  const toggle = document.getElementById(id + '-toggle');
+  if (!body || !toggle) return;
+  body.classList.toggle('hidden');
+  toggle.classList.toggle('collapsed');
+  try { localStorage.setItem('collapse_' + id, body.classList.contains('hidden') ? '1' : '0'); } catch(e) {}
+}
+function initCollapses() {
+  document.querySelectorAll('.collapse-body').forEach(el => {
+    const id = el.id.replace('-body', '');
+    try {
+      if (localStorage.getItem('collapse_' + id) === '1') {
+        el.classList.add('hidden');
+        const t = document.getElementById(id + '-toggle');
+        if (t) t.classList.add('collapsed');
+      }
+    } catch(e) {}
+  });
+}
+
 function calcCassette() {
   const mat    = MATERIALS[document.getElementById('c_material').value];
   const thick  = parseFloat(document.getElementById('c_thick').value) || 0;
@@ -3899,6 +3989,7 @@ window.addEventListener('DOMContentLoaded', () => {
   calcMK();
   nestUpdatePrice();
   calcFencing();
+  initCollapses();
 });
 
 // ═══════════════════════════════════════════
