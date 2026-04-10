@@ -1450,6 +1450,129 @@
 
         <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px">за 1 м²</div>
       </div>
+
+      <!-- КНОПКА СФОРМИРОВАТЬ КП -->
+      <button id="btn-kp" onclick="openKP()" style="margin-top:16px;padding:14px 28px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700;width:100%;letter-spacing:0.5px;">
+        📋 Сформировать коммерческое предложение
+      </button>
+
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО КП -->
+  <div id="kp-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;padding:20px;">
+    <div style="max-width:900px;margin:0 auto;background:#fff;border-radius:12px;padding:30px;font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;position:relative;">
+      <button onclick="closeKP()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:#888;">✕</button>
+
+      <!-- Шапка КП -->
+      <div style="text-align:right;margin-bottom:20px;">
+        <div style="font-size:16px;font-weight:700;color:#2c3e50;">ООО «ЭВЕРЕСТ-ТЕХ»</div>
+        <div style="font-size:11px;color:#666;">127644, г. Москва, ул. Лобненская, д. 21, эт. 3</div>
+        <div style="font-size:11px;color:#666;">Тел.: 8 (495) 255-06-40 | e-mail: info@everest-zavod.ru</div>
+        <div style="font-size:9px;color:#999;margin-top:4px;">ИНН 7713766665 КПП 771301001 ОГРН 1137746305058</div>
+      </div>
+
+      <!-- Поля КП -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;font-size:12px;">
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:3px;">Дата:</label>
+          <input type="date" id="kp-date" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+        </div>
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:3px;">Контакт для связи:</label>
+          <select id="kp-contact" onchange="kpUpdateContact()" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;"></select>
+        </div>
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:3px;">Проект:</label>
+          <input type="text" id="kp-project" placeholder="Название проекта" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+        </div>
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:3px;">Адрес:</label>
+          <input type="text" id="kp-address" placeholder="Адрес объекта" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+        </div>
+      </div>
+
+      <div style="font-size:12px;margin-bottom:12px;padding:8px;background:#f0f4f8;border-radius:6px;">
+        <p>Уважаемый Клиент!</p>
+        <p style="margin-top:4px;">Предлагаем Вам рассмотреть наше коммерческое предложение на поставку фасадных кассет.</p>
+      </div>
+
+      <!-- Вариант формирования -->
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:12px;display:block;margin-bottom:6px;">Формирование спецификации:</label>
+        <select id="kp-spec-type" onchange="kpBuildSpec()" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:12px;width:100%;">
+          <option value="per_piece">За штуку (каждая кассета отдельно)</option>
+          <option value="per_m2_expanded">За м² развёртки (развёрнуто — каждый размер)</option>
+          <option value="per_m2_collapsed">За м² развёртки (схлопнуто — одна строка)</option>
+        </select>
+      </div>
+
+      <!-- Таблица спецификации -->
+      <div style="overflow-x:auto;margin-bottom:12px;">
+        <table id="kp-spec-table" style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px;">
+          <thead>
+            <tr style="background:#2c3e50;color:#fff;font-size:10px;text-transform:uppercase;">
+              <td style="padding:6px 4px;width:30px;">№</td>
+              <td style="padding:6px 4px;">Наименование</td>
+              <td style="padding:6px 4px;">Материал</td>
+              <td style="padding:6px 4px;">Цвет</td>
+              <td style="padding:6px 4px;">Ед.изм.</td>
+              <td style="padding:6px 4px;width:60px;">Кол-во</td>
+              <td style="padding:6px 4px;width:90px;">Цена за ед. с НДС</td>
+              <td style="padding:6px 4px;width:100px;">Сумма с НДС</td>
+            </tr>
+          </thead>
+          <tbody id="kp-spec-body"></tbody>
+          <tfoot id="kp-spec-foot" style="font-weight:700;font-size:12px;"></tfoot>
+        </table>
+      </div>
+
+      <!-- Условия -->
+      <div style="margin-top:16px;border-top:2px solid #2c3e50;padding-top:12px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Коммерческие условия:</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+          <div>
+            <label style="font-weight:600;">Метод расчёта:</label>
+            <select id="kp-cond-method" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;margin-top:2px;"></select>
+          </div>
+          <div>
+            <label style="font-weight:600;">Доставка:</label>
+            <select id="kp-cond-delivery" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;margin-top:2px;"></select>
+          </div>
+          <div>
+            <label style="font-weight:600;">Условия оплаты:</label>
+            <select id="kp-cond-payment" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;margin-top:2px;"></select>
+          </div>
+          <div>
+            <label style="font-weight:600;">Упаковка:</label>
+            <select id="kp-cond-pack" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;margin-top:2px;"></select>
+          </div>
+          <div>
+            <label style="font-weight:600;">Сырьё от заказчика:</label>
+            <select id="kp-cond-material" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;margin-top:2px;"></select>
+          </div>
+          <div>
+            <label style="font-weight:600;">Срок изготовления:</label>
+            <input type="text" id="kp-cond-deadline" value="15 рабочих дней" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;margin-top:2px;">
+          </div>
+        </div>
+        <div style="font-size:10px;color:#888;margin-top:8px;">• Разработка КМД, маркировка и упаковка включены в стоимость<br>• Предложение действительно в течение 3 рабочих дней</div>
+      </div>
+
+      <!-- Подпись -->
+      <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:11px;">
+        <div>
+          <div style="font-weight:600;">Генеральный директор ООО «Эверест-Тех»</div>
+          <div style="margin-top:8px;">_________________ / Рыбаков А.В.</div>
+        </div>
+        <div style="font-size:10px;color:#2c3e50;font-weight:700;">WWW.EVEREST-ZAVOD.RU</div>
+      </div>
+
+      <!-- Кнопки скачивания -->
+      <div style="margin-top:20px;display:flex;gap:10px;">
+        <button onclick="kpDownloadExcel()" style="flex:1;padding:12px;background:#217346;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">📥 Скачать Excel</button>
+        <button onclick="kpDownloadPDF()" style="flex:1;padding:12px;background:#dc3545;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">📄 Скачать PDF</button>
+      </div>
     </div>
   </div>
 
@@ -4162,6 +4285,358 @@ function calcFencing() {
   set('rf-markup-val', g('f_markup') + '% = ' + fmt(markupVal));
   set('rf-price-big',  fmt(salePrice));
 }
+
+// ==================== КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ (КП) ====================
+
+const KP_CONTACTS = [
+  {name:"Ковалев Михаил Александрович",role:"коммерческий директор",phone:"89169018140",email:"ceo@everest-zavod.ru"},
+  {name:"Стеняев Алексей Дмитриевич",role:"зам. коммерческого директора",phone:"89266996187",email:"stenyaev.sale@everest-zavod.ru"},
+  {name:"Ермаков Данила Васильевич",role:"исполнительный директор",phone:"89852520808",email:"ermakov@everest-zavod.ru"},
+  {name:"Лашин Михаил Игоревич",role:"руководитель отдела продаж",phone:"89998844982",email:"lashin@everest-zavod.ru"},
+  {name:"Картушов Роман Владимирович",role:"рук. по работе с ключевыми клиентами",phone:"89151900306",email:"kartushov@everest-zavod.ru"},
+  {name:"Тарабанов Вячеслав Николаевич",role:"рук. по работе с ключевыми клиентами",phone:"89817499926",email:"tarabanov@everest-zavod.ru"},
+  {name:"Беляков Григорий Борисович",role:"руководитель проектов",phone:"89775626382",email:"belyakov@everest-zavod.ru"},
+  {name:"Иванов Максим Витальевич",role:"руководитель проектов",phone:"89258549808",email:"ivanov.m@everest-zavod.ru"},
+  {name:"Качулин Виталий Александрович",role:"руководитель проектов",phone:"89653179666",email:"kachulin@everest-zavod.ru"},
+  {name:"Филиппов Алексей Витальевич",role:"руководитель проектов",phone:"89685447014",email:"man1@everest-zavod.ru"},
+  {name:"Бадалян Рената Рудольфовна",role:"руководитель проектов",phone:"89099735403",email:"badalyan@everest-zavod.ru"},
+  {name:"Данилов Дмитрий Романович",role:"руководитель проектов",phone:"89017505407",email:"danilov@everest-zavod.ru"},
+  {name:"Кадырова Анна Андреевна",role:"руководитель проектов",phone:"89151050462",email:"kadyrova@everest-zavod.ru"},
+  {name:"Солонина Алексей Петрович",role:"руководитель проектов",phone:"89036991272",email:"solonina@everest-zavod.ru"},
+  {name:"Сосса Владимир Геннадиевич",role:"руководитель проектов",phone:"89153776482",email:"man2@everest-zavod.ru"},
+  {name:"Юдаев Руслан Игоревич",role:"руководитель проектов",phone:"89267079182",email:"yudaev@everest-zavod.ru"},
+];
+
+const KP_NDS = 0.22;
+
+const KP_CONDITIONS = {
+  method: [
+    "Стоимость указана по ПРОЕКЦИОННОЙ фасадной площади.",
+    "Стоимость указана по ВИДИМОЙ части панели.",
+    "Стоимость указана по РАЗВЕРТКЕ панели.",
+    "Стоимость указана из расчета ВЕСА изделия."
+  ],
+  delivery: [
+    "Итоговая сумма указана без учета доставки до объекта.",
+    "Итоговая сумма указана с учетом доставки до объекта.",
+    "Доставка осуществляется самовывозом с производственного склада ООО «Эверест-Тех».",
+    "Доставка осуществляется на объект."
+  ],
+  payment: [
+    "Условия оплаты: аванс - 70%, остаток - 30% перед отгрузкой.",
+    "Условия оплаты: аванс - 100%.",
+    "Условия оплаты: аванс - 40%, перед отгрузкой 30%, после отгрузки 30%.",
+    "Условия оплаты: аванс - 70%, остаток - 30% после отгрузки.",
+    "Условия оплаты: аванс - 30%, остаток - 70% перед отгрузкой.",
+    "Условия оплаты: аванс - 30%, остаток - 70% после отгрузки.",
+    "Условия оплаты: постоплата - 100% в течение 10 банковских дней.",
+    "Условия оплаты согласовываются в Спецификации."
+  ],
+  pack: [
+    "Упаковка в стрейч- и/или воздушно-пузырчатую пленку.",
+    "Упаковка в жесткую тару (деревянный ящик).",
+    "Упаковка в жесткую возвратную (многооборотную) тару."
+  ],
+  material: [
+    "Материал предоставляет Исполнитель.",
+    "Материал предоставляет Заказчик.",
+    "Дополнительный материал предоставляет Заказчик."
+  ]
+};
+
+function openKP() {
+  const modal = document.getElementById('kp-modal');
+  modal.style.display = '';
+  document.body.style.overflow = 'hidden';
+
+  // Дата сегодня
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('kp-date').value = today;
+
+  // Контакты
+  const sel = document.getElementById('kp-contact');
+  sel.innerHTML = KP_CONTACTS.map((c,i) => `<option value="${i}">${c.name}</option>`).join('');
+  kpUpdateContact();
+
+  // Условия
+  for (const [key, vals] of Object.entries(KP_CONDITIONS)) {
+    const el = document.getElementById('kp-cond-' + key);
+    el.innerHTML = vals.map(v => `<option>${v}</option>`).join('');
+  }
+
+  kpBuildSpec();
+}
+
+function closeKP() {
+  document.getElementById('kp-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function kpUpdateContact() {
+  // Контакт обновлён через select
+}
+
+function kpGetContact() {
+  const idx = parseInt(document.getElementById('kp-contact').value);
+  return KP_CONTACTS[idx] || KP_CONTACTS[0];
+}
+
+function kpGetSpecData() {
+  // Получаем данные спецификации из калькулятора
+  const rows = document.querySelectorAll('#ct-spec-body tr');
+  const spec = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs.length < 4) return;
+    const name = inputs[0]?.value || '';
+    const a1 = parseFloat(inputs[1]?.value) || 0;
+    const b1 = parseFloat(inputs[2]?.value) || 0;
+    const qty = parseFloat(inputs[3]?.value) || 0;
+    if (!name || !qty) return;
+
+    // Читаем развёртку и Кт из ячеек
+    const devCell = row.cells[5];
+    const ktCell = row.cells[6];
+    const devText = devCell?.textContent || '';
+    const ktText = ktCell?.textContent || '';
+    const devArea = parseFloat(devText) || 0; // м²
+    const kt = parseFloat(ktText) || 1;
+    const visArea = devArea / kt;
+
+    spec.push({name, a1, b1, qty, devArea, visArea, kt});
+  });
+  return spec;
+}
+
+function kpGetMaterialInfo() {
+  // Материал из калькулятора
+  const matSel = document.getElementById('c_material');
+  const mat = matSel?.options?.[matSel.selectedIndex]?.text || 'Алюминий';
+  const thick = document.getElementById('c_thick')?.value || '2';
+  // Покрытие (цвет)
+  const coverSel = document.getElementById('c_cover_type');
+  const cover = coverSel?.options?.[coverSel.selectedIndex]?.text || 'Порошковая окраска';
+  const color = document.getElementById('c_ral')?.value || 'RAL 7016';
+  return `${mat} ${thick}мм, ${cover} ${color}`;
+}
+
+function kpGetPricePerM2() {
+  // Цена за м² развёртки — из итогового блока
+  const finalText = document.getElementById('r-c-final-1')?.textContent || '0';
+  const price = parseFloat(finalText.replace(/[^0-9.]/g, '')) || 0;
+  return price;
+}
+
+function kpBuildSpec() {
+  const type = document.getElementById('kp-spec-type').value;
+  const spec = kpGetSpecData();
+  const matInfo = kpGetMaterialInfo();
+  const priceM2 = kpGetPricePerM2();
+  const tbody = document.getElementById('kp-spec-body');
+  const tfoot = document.getElementById('kp-spec-foot');
+  tbody.innerHTML = '';
+
+  let totalQty = 0, totalSum = 0;
+  let idx = 1;
+
+  if (type === 'per_piece') {
+    // За штуку — каждая кассета отдельно
+    spec.forEach(s => {
+      const pricePcs = priceM2 * s.devArea; // цена за 1 штуку
+      const sum = pricePcs * s.qty;
+      totalQty += s.qty;
+      totalSum += sum;
+      tbody.innerHTML += `<tr style="border-bottom:1px solid #eee;">
+        <td style="padding:4px;">${idx++}</td>
+        <td style="padding:4px;">Кассета ${s.name} (${s.a1}×${s.b1})</td>
+        <td style="padding:4px;">${matInfo}</td>
+        <td style="padding:4px;">—</td>
+        <td style="padding:4px;">шт</td>
+        <td style="padding:4px;">${s.qty}</td>
+        <td style="padding:4px;">${fmt(pricePcs)} ₽</td>
+        <td style="padding:4px;">${fmt(sum)} ₽</td>
+      </tr>`;
+    });
+  } else if (type === 'per_m2_expanded') {
+    // За м² развёрнуто — каждый размер отдельно
+    spec.forEach(s => {
+      const totalDev = s.devArea * s.qty;
+      const sum = priceM2 * totalDev;
+      totalQty += totalDev;
+      totalSum += sum;
+      tbody.innerHTML += `<tr style="border-bottom:1px solid #eee;">
+        <td style="padding:4px;">${idx++}</td>
+        <td style="padding:4px;">Кассета ${s.name} (${s.a1}×${s.b1}) по развёртке</td>
+        <td style="padding:4px;">${matInfo}</td>
+        <td style="padding:4px;">—</td>
+        <td style="padding:4px;">м²</td>
+        <td style="padding:4px;">${totalDev.toFixed(3)}</td>
+        <td style="padding:4px;">${fmt(priceM2)} ₽</td>
+        <td style="padding:4px;">${fmt(sum)} ₽</td>
+      </tr>`;
+    });
+  } else {
+    // Схлопнуто — одна строка
+    let totalDev = 0, totalVis = 0, totalPcs = 0;
+    spec.forEach(s => {
+      totalDev += s.devArea * s.qty;
+      totalVis += s.visArea * s.qty;
+      totalPcs += s.qty;
+    });
+    totalQty = totalDev;
+    totalSum = priceM2 * totalDev;
+    tbody.innerHTML += `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:4px;">1</td>
+      <td style="padding:4px;">Кассета фасадная скрытого монтажа (по развёртке)</td>
+      <td style="padding:4px;">${matInfo}</td>
+      <td style="padding:4px;">—</td>
+      <td style="padding:4px;">м²</td>
+      <td style="padding:4px;">${totalDev.toFixed(3)}</td>
+      <td style="padding:4px;">${fmt(priceM2)} ₽</td>
+      <td style="padding:4px;">${fmt(totalSum)} ₽</td>
+    </tr>`;
+  }
+
+  const nds = totalSum / (1 + KP_NDS) * KP_NDS;
+  tfoot.innerHTML = `<tr style="border-top:2px solid #2c3e50;">
+    <td colspan="5">ИТОГО с НДС ${KP_NDS*100}%:</td>
+    <td>${type === 'per_piece' ? totalQty : totalQty.toFixed(3)}</td>
+    <td></td><td>${fmt(totalSum)} ₽</td>
+  </tr>
+  <tr><td colspan="7">в т.ч. НДС ${KP_NDS*100}%:</td><td>${fmt(nds)} ₽</td></tr>`;
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('ru-RU');
+}
+
+// Скачать Excel
+async function kpDownloadExcel() {
+  // Используем SheetJS (xlsx)
+  if (typeof XLSX === 'undefined') {
+    // Подгрузим динамически
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise(r => s.onload = r);
+  }
+
+  const contact = kpGetContact();
+  const spec = kpGetSpecData();
+  const matInfo = kpGetMaterialInfo();
+  const priceM2 = kpGetPricePerM2();
+  const type = document.getElementById('kp-spec-type').value;
+
+  const wb = XLSX.utils.book_new();
+
+  // Лист КП
+  const kp_data = [
+    ["ООО «ЭВЕРЕСТ-ТЕХ»"],
+    ["127644, г. Москва, ул. Лобненская, д. 21, эт. 3"],
+    ["Тел.: 8 (495) 255-06-40 | e-mail: info@everest-zavod.ru"],
+    [],
+    ["Дата:", document.getElementById('kp-date').value, "", "", "", "Контакт для связи:"],
+    ["Проект:", document.getElementById('kp-project').value, "", "", "", "Ф.И.О.:", contact.name],
+    ["Адрес:", document.getElementById('kp-address').value, "", "", "", "должность:", contact.role],
+    ["", "", "", "", "", "тел.:", contact.phone],
+    ["", "", "", "", "", "e-mail:", contact.email],
+    [],
+    ["Уважаемый Клиент!"],
+    ["Предлагаем Вам рассмотреть наше коммерческое предложение."],
+    [],
+    ["№", "Наименование", "Материал", "Цвет", "Ед.изм.", "Кол-во", "Цена за ед. с НДС", "Сумма с НДС"],
+  ];
+
+  let totalSum = 0;
+  let idx = 1;
+
+  if (type === 'per_piece') {
+    spec.forEach(s => {
+      const p = priceM2 * s.devArea;
+      const sum = p * s.qty;
+      totalSum += sum;
+      kp_data.push([idx++, `Кассета ${s.name} (${s.a1}×${s.b1})`, matInfo, "", "шт", s.qty, Math.round(p), Math.round(sum)]);
+    });
+  } else if (type === 'per_m2_expanded') {
+    spec.forEach(s => {
+      const totalDev = s.devArea * s.qty;
+      const sum = priceM2 * totalDev;
+      totalSum += sum;
+      kp_data.push([idx++, `Кассета ${s.name} (${s.a1}×${s.b1}) по развёртке`, matInfo, "", "м²", +totalDev.toFixed(3), Math.round(priceM2), Math.round(sum)]);
+    });
+  } else {
+    let totalDev = 0;
+    spec.forEach(s => totalDev += s.devArea * s.qty);
+    totalSum = priceM2 * totalDev;
+    kp_data.push([1, "Кассета фасадная скрытого монтажа (по развёртке)", matInfo, "", "м²", +totalDev.toFixed(3), Math.round(priceM2), Math.round(totalSum)]);
+  }
+
+  const nds = totalSum / (1 + KP_NDS) * KP_NDS;
+  kp_data.push([]);
+  kp_data.push([`ИТОГО с НДС ${KP_NDS*100}%:`, "", "", "", "", "", "", Math.round(totalSum)]);
+  kp_data.push([`в т.ч. НДС ${KP_NDS*100}%:`, "", "", "", "", "", "", Math.round(nds)]);
+  kp_data.push([]);
+  kp_data.push(["Коммерческие условия:"]);
+  kp_data.push(["• " + document.getElementById('kp-cond-method').value]);
+  kp_data.push(["• Упаковка: " + document.getElementById('kp-cond-pack').value]);
+  kp_data.push(["• " + document.getElementById('kp-cond-payment').value]);
+  kp_data.push(["• " + document.getElementById('kp-cond-delivery').value]);
+  kp_data.push(["• Срок изготовления: " + document.getElementById('kp-cond-deadline').value]);
+  kp_data.push(["• Предложение действительно в течение 3 рабочих дней"]);
+  kp_data.push([]);
+  kp_data.push(["Генеральный директор ООО «Эверест-Тех» _________________ / Рыбаков А.В."]);
+
+  const ws = XLSX.utils.aoa_to_sheet(kp_data);
+  ws['!cols'] = [{wch:5},{wch:40},{wch:25},{wch:10},{wch:8},{wch:10},{wch:18},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, ws, 'КП');
+
+  // Лист Контакты
+  const contacts_data = [["Ф.И.О.", "Должность", "Телефон", "e-mail"]];
+  KP_CONTACTS.forEach(c => contacts_data.push([c.name, c.role, c.phone, c.email]));
+  const ws2 = XLSX.utils.aoa_to_sheet(contacts_data);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Контакты');
+
+  // Лист Условия
+  const cond_data = [];
+  for (const [key, vals] of Object.entries(KP_CONDITIONS)) {
+    cond_data.push([key]);
+    vals.forEach(v => cond_data.push([v]));
+    cond_data.push([]);
+  }
+  const ws3 = XLSX.utils.aoa_to_sheet(cond_data);
+  XLSX.utils.book_append_sheet(wb, ws3, 'Условия');
+
+  XLSX.writeFile(wb, `КП_Эверест-Тех_${document.getElementById('kp-date').value}.xlsx`);
+}
+
+// Скачать PDF
+function kpDownloadPDF() {
+  const modal = document.getElementById('kp-modal');
+  const content = modal.querySelector('div > div');
+  // Скрываем кнопки
+  const btns = content.querySelector('div:last-child');
+  const closeBtn = content.querySelector('button');
+  const oldDisplay = btns.style.display;
+  const oldClose = closeBtn.style.display;
+  btns.style.display = 'none';
+  closeBtn.style.display = 'none';
+
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <html><head><title>КП Эверест-Тех</title>
+    <style>body{font-family:'Helvetica Neue',Arial,sans-serif;padding:30px;color:#1a1a1a;}
+    table{width:100%;border-collapse:collapse;} td{padding:4px;border:1px solid #ddd;font-size:11px;}
+    thead td{background:#2c3e50;color:#fff;font-size:10px;text-transform:uppercase;}
+    @media print{@page{margin:15mm;}}</style></head><body>
+    ${content.innerHTML}
+    </body></html>`);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 500);
+
+  btns.style.display = oldDisplay;
+  closeBtn.style.display = oldClose;
+}
+
 </script>
 </body>
 </html>
