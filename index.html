@@ -564,14 +564,39 @@
     <div class="logo-title">⚙️ Калькулятор металлических изделий &nbsp;<span class="logo-accent">Эверест-Тех</span></div>
     <div class="logo-sub">Разработчик: Ковалев Михаил Александрович</div>
   </div>
-  <div class="header-badge">v1.0</div>
+  <div class="header-badge">v2.0</div>
+  <div id="user-panel" style="position:absolute;right:16px;top:12px;display:flex;align-items:center;gap:10px;"></div>
 </header>
+
+<div id="admin-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1001;overflow-y:auto;padding:20px;">
+  <div style="max-width:700px;margin:0 auto;background:#1a1a2e;border-radius:16px;padding:30px;position:relative;">
+    <button onclick="document.getElementById('admin-modal').style.display='none'" style="position:absolute;top:12px;right:16px;background:none;border:none;color:#888;font-size:22px;cursor:pointer;">✕</button>
+    <h2 style="margin-bottom:20px;color:#fff;font-size:18px;">👥 Управление пользователями</h2>
+    <div id="admin-users-list"></div>
+    <div style="margin-top:20px;border-top:1px solid #333;padding-top:20px;">
+      <h3 style="color:#aaa;font-size:14px;margin-bottom:12px;">Новый пользователь</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <input type="text" id="new-login" placeholder="Логин" style="padding:8px;background:#0a0a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:12px;">
+        <input type="text" id="new-name" placeholder="Ф.И.О." style="padding:8px;background:#0a0a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:12px;">
+        <input type="password" id="new-pass" placeholder="Пароль" style="padding:8px;background:#0a0a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:12px;">
+        <select id="new-role" style="padding:8px;background:#0a0a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:12px;">
+          <option value="user">Пользователь</option>
+          <option value="admin">Администратор</option>
+        </select>
+        <input type="text" id="new-phone" placeholder="Телефон" style="padding:8px;background:#0a0a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:12px;">
+        <input type="text" id="new-email" placeholder="E-mail" style="padding:8px;background:#0a0a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:12px;">
+      </div>
+      <button onclick="addUser()" style="margin-top:10px;padding:10px 24px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">+ Добавить</button>
+    </div>
+  </div>
+</div>
 
 <div class="tabs-bar">
   <button class="tab-btn active" onclick="switchTab('cassette')">🔲 Кассеты</button>
   <button class="tab-btn" onclick="switchTab('mk')">🔩 Металлоконструкции</button>
   <button class="tab-btn" onclick="switchTab('nesting')">✂️ Раскрой</button>
   <button class="tab-btn" onclick="switchTab('fencing')">🛡️ Ограждения КГХ</button>
+  <button class="tab-btn" onclick="switchTab('prices')">💰 Прайс-лист</button>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -2360,6 +2385,46 @@
 </div><!-- /main -->
 </div><!-- /tab-fencing -->
 
+<!-- ═══════════════════════════════════════════
+     TAB: ПРАЙС-ЛИСТ
+════════════════════════════════════════════ -->
+<div id="tab-prices" class="hidden">
+<div class="main">
+  <div class="left-col" style="max-width:100%;">
+    <div class="card">
+      <div class="card-header"><h3>💰 Прайс-лист</h3></div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <button onclick="addPriceRow()" style="padding:8px 16px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">+ Добавить позицию</button>
+          <button onclick="savePrices()" style="padding:8px 16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">💾 Сохранить на сервере</button>
+          <button onclick="exportPricesExcel()" style="padding:8px 16px;background:#217346;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">📥 Скачать Excel</button>
+          <label style="padding:8px 16px;background:#f39c12;color:#fff;border-radius:6px;cursor:pointer;font-size:12px;">📤 Загрузить Excel<input type="file" accept=".xlsx,.xls,.csv" onchange="importPricesExcel(event)" style="display:none;"></label>
+        </div>
+        <div style="margin-bottom:12px;">
+          <input type="text" id="price-search" placeholder="Поиск по наименованию..." oninput="filterPrices()" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;">
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="prices-table" style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead>
+              <tr style="background:var(--bg);text-transform:uppercase;font-size:10px;color:var(--text-light);">
+                <td style="padding:6px 4px;width:30px;">#</td>
+                <td style="padding:6px 4px;">Категория</td>
+                <td style="padding:6px 4px;">Наименование</td>
+                <td style="padding:6px 4px;width:60px;">Ед.изм.</td>
+                <td style="padding:6px 4px;width:90px;">Цена, ₽</td>
+                <td style="padding:6px 4px;width:60px;">Удалить</td>
+              </tr>
+            </thead>
+            <tbody id="prices-body"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--text-light);" id="prices-stats"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ═══════════════════════════════════════════
@@ -2400,6 +2465,8 @@ function switchTab(tab) {
   document.getElementById('tab-mk').classList.toggle('hidden', tab !== 'mk');
   document.getElementById('tab-nesting').classList.toggle('hidden', tab !== 'nesting');
   document.getElementById('tab-fencing').classList.toggle('hidden', tab !== 'fencing');
+  document.getElementById('tab-prices').classList.toggle('hidden', tab !== 'prices');
+  if (tab === 'prices') loadPrices();
 }
 
 // ═══════════════════════════════════════════
@@ -4637,6 +4704,209 @@ function kpDownloadPDF() {
   btns.style.display = oldDisplay;
   closeBtn.style.display = oldClose;
 }
+
+// ==================== АВТОРИЗАЦИЯ ====================
+
+let currentUser = null;
+
+async function checkAuth() {
+  try {
+    const r = await fetch('/api/me');
+    if (r.ok) {
+      currentUser = await r.json();
+      showUserPanel();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+function showUserPanel() {
+  if (!currentUser) return;
+  const panel = document.getElementById('user-panel');
+  let html = `<span style="font-size:11px;color:#aaa;">${currentUser.name}</span>`;
+  if (currentUser.role === 'admin') {
+    html += `<button onclick="openAdmin()" style="padding:4px 10px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid #333;border-radius:4px;cursor:pointer;font-size:11px;">👥</button>`;
+  }
+  html += `<button onclick="doLogout()" style="padding:4px 10px;background:rgba(255,70,70,0.2);color:#ff6666;border:1px solid #ff444444;border-radius:4px;cursor:pointer;font-size:11px;">Выход</button>`;
+  panel.innerHTML = html;
+}
+
+async function doLogout() {
+  await fetch('/api/logout', {method:'POST'});
+ location.reload();
+}
+
+async function openAdmin() {
+  const modal = document.getElementById('admin-modal');
+  modal.style.display = '';
+  const r = await fetch('/api/users');
+  const users = await r.json();
+  const list = document.getElementById('admin-users-list');
+  list.innerHTML = users.map(u => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid #222;font-size:12px;">
+      <div style="flex:1;">
+        <div style="color:#fff;font-weight:600;">${u.name} <span style="color:#667eea;font-size:10px;">${u.role === 'admin' ? ' админ' : ''}</span></div>
+        <div style="color:#666;font-size:11px;">Логин: ${u.login}${u.phone ? ' | ' + u.phone : ''}${u.email ? ' | ' + u.email : ''}</div>
+      </div>
+      ${u.role !== 'admin' ? `<button onclick="resetUserPass('${u.login}')" style="padding:4px 8px;background:#f39c12;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">🔑 Пароль</button><button onclick="deleteUser('${u.login}','${u.name}')" style="padding:4px 8px;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;">Удалить</button>` : ''}
+    </div>`).join('');
+}
+
+async function addUser() {
+  const login = document.getElementById('new-login').value;
+  const name = document.getElementById('new-name').value;
+  const pass = document.getElementById('new-pass').value;
+  const role = document.getElementById('new-role').value;
+  const phone = document.getElementById('new-phone').value;
+  const email = document.getElementById('new-email').value;
+  if (!login || !name || !pass) { alert('Заполните логин, имя и пароль'); return; }
+  const r = await fetch('/api/users', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({login, name, password:pass, role, phone, email})
+  });
+ const d = await r.json();
+  if (r.ok) {
+ document.getElementById('new-login').value='';
+    document.getElementById('new-name').value='';
+    document.getElementById('new-pass').value='';
+    document.getElementById('new-phone').value='';
+    document.getElementById('new-email').value='';
+    openAdmin();
+  } else {
+    alert(d.error);
+  }
+}
+
+async function deleteUser(login, name) {
+  if (!confirm('Удалить пользователя ' + name + '?')) return;
+  const r = await fetch('/api/users/' + encodeURIComponent(login), {method:'DELETE'});
+  if (r.ok) openAdmin(); else alert('Ошибка');
+}
+
+async function resetUserPass(login) {
+  const pass = prompt('Новый пароль для ' + login + ':');
+  if (!pass) return;
+  const r = await fetch('/api/users/' + encodeURIComponent(login) + '/reset', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({newPassword:pass})
+  });
+  const d = await r.json();
+  alert(d.ok ? 'Пароль изменён' : d.error);
+}
+
+// ==================== ПРАЙС-ЛИСТ ====================
+
+let pricesData = {categories:[], items:[]};
+
+async function loadPrices() {
+  try {
+    const r = await fetch('/api/prices');
+    if (r.ok) { pricesData = await r.json(); renderPrices(); }
+  } catch {}
+}
+
+function renderPrices(filter) {
+  const body = document.getElementById('prices-body');
+  const items = (pricesData.items || []).filter(item => {
+    if (!filter) return true;
+    const f = filter.toLowerCase();
+    return (item.name||'').toLowerCase().includes(f) || (item.category||'').toLowerCase().includes(f);
+  });
+  body.innerHTML = items.map((item, i) => `
+    <tr style="border-bottom:1px solid #1a1a2e;">
+      <td style="padding:4px;color:#666;">${i+1}</td>
+      <td style="padding:4px;"><input type="text" value="${escHtml(item.category||'')}" onchange="pricesData.items[${pricesData.items.indexOf(item)}].category=this.value" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
+      <td style="padding:4px;"><input type="text" value="${escHtml(item.name||'')}" onchange="pricesData.items[${pricesData.items.indexOf(item)}].name=this.value" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
+      <td style="padding:4px;"><input type="text" value="${escHtml(item.unit||'')}" onchange="pricesData.items[${pricesData.items.indexOf(item)}].unit=this.value" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
+      <td style="padding:4px;"><input type="number" value="${item.price||0}" step="0.01" onchange="pricesData.items[${pricesData.items.indexOf(item)}].price=parseFloat(this.value)||0" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
+      <td style="padding:4px;text-align:center;"><button onclick="pricesData.items.splice(${pricesData.items.indexOf(item)},1);renderPrices();" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;">✕</button></td>
+    </tr>`).join('');
+  document.getElementById('prices-stats').textContent = `Позиций: ${items.length} из ${(pricesData.items||[]).length}`;
+}
+
+function filterPrices() {
+  renderPrices(document.getElementById('price-search').value);
+}
+
+function addPriceRow() {
+  if (!pricesData.items) pricesData.items = [];
+  pricesData.items.push({category:'Общее', name:'', unit:'шт', price:0, note:''});
+  renderPrices();
+  const tbody = document.getElementById('prices-body');
+  const lastRow = tbody.lastElementChild;
+  if (lastRow) lastRow.querySelector('input').focus();
+}
+
+async function savePrices() {
+  const r = await fetch('/api/prices', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(pricesData)
+  });
+  if (r.ok) {
+    const d = await r.json();
+    document.getElementById('prices-stats').textContent = '✅ Сохранено! ' + new Date().toLocaleTimeString();
+    setTimeout(() => renderPrices(), 1500);
+  } else { alert('Ошибка сохранения'); }
+}
+
+async function exportPricesExcel() {
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise(r => s.onload = r);
+  }
+  const rows = [['Категория','Наименование','Ед.изм.','Цена (руб)']];
+  (pricesData.items || []).forEach(i => rows.push([i.category||'',i.name||'',i.unit||'',i.price||0]));
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:20},{wch:40},{wch:10},{wch:15}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Прайс-лист');
+  XLSX.writeFile(wb, `Прайс_Эверест-Тех_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function importPricesExcel(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise(r => s.onload = r);
+  }
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data);
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws);
+  const items = rows.map(r => ({
+    category: r['Категория'] || r['Категория '] || 'Общее',
+    name: r['Наименование'] || '',
+    unit: r['Ед.изм.'] || r['Ед.изм'] || 'шт',
+    price: parseFloat(r['Цена (руб)'] || r['Цена'] || 0),
+    note: r['Примечание'] || ''
+  })).filter(i => i.name);
+  if (!items.length) { alert('Файл пуст или неверный формат. Нужны столбцы: Категория, Наименование, Ед.изм., Цена'); return; }
+  const r = await fetch('/api/prices/import', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({items})
+  });
+  const d = await r.json();
+  if (r.ok) {
+    alert(`Импортировано: ${d.added} новых. Всего: ${d.total}`);
+    loadPrices();
+  } else { alert(d.error); }
+  e.target.value = '';
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Проверка авторизации при загрузке
+checkAuth();
 
 </script>
 </body>
