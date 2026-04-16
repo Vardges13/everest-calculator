@@ -154,6 +154,9 @@
     margin-bottom: 5px;
   }
   input[type="number"], input[type="text"], select {
+  .price-field label { display:block; font-size:10px; color:var(--text-light); margin-bottom:3px; }
+  .price-field input { width:100%; padding:6px 8px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:12px; }
+  .price-field span { font-size:9px; color:#666; margin-top:2px; display:block; }
     width: 100%;
     padding: 9px 12px;
     border: 1.5px solid var(--border);
@@ -2392,33 +2395,83 @@
 <div class="main">
   <div class="left-col" style="max-width:100%;">
     <div class="card">
-      <div class="card-header"><h3>💰 Прайс-лист</h3></div>
+      <div class="card-header">
+        <h3>💰 Прайс-лист</h3>
+        <div style="font-size:10px;color:var(--text-light);margin-top:4px;">Значения подставляются во все расчёты автоматически</div>
+      </div>
       <div class="card-body">
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-          <button onclick="addPriceRow()" style="padding:8px 16px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">+ Добавить позицию</button>
-          <button onclick="savePrices()" style="padding:8px 16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">💾 Сохранить на сервере</button>
-          <button onclick="exportPricesExcel()" style="padding:8px 16px;background:#217346;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">📥 Скачать Excel</button>
-          <label style="padding:8px 16px;background:#f39c12;color:#fff;border-radius:6px;cursor:pointer;font-size:12px;">📤 Загрузить Excel<input type="file" accept=".xlsx,.xls,.csv" onchange="importPricesExcel(event)" style="display:none;"></label>
+          <button onclick="savePriceList()" style="padding:8px 16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">💾 Сохранить</button>
+          <button onclick="exportPriceList()" style="padding:8px 16px;background:#217346;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">📥 Скачать Excel</button>
+          <label style="padding:8px 16px;background:#f39c12;color:#fff;border-radius:6px;cursor:pointer;font-size:12px;">📤 Загрузить Excel<input type="file" accept=".xlsx,.xls,.csv" onchange="importPriceList(event)" style="display:none;"></label>
+          <button onclick="loadPriceList()" style="padding:8px 16px;background:rgba(255,255,255,0.1);color:#aaa;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">🔄 Обновить</button>
         </div>
-        <div style="margin-bottom:12px;">
-          <input type="text" id="price-search" placeholder="Поиск по наименованию..." oninput="filterPrices()" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;">
+
+        <!-- КАССЕТЫ -->
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:700;color:#667eea;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2a2a4a;">🔲 Кассеты</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div class="price-field"><label>Алюминий за кг</label><input type="number" id="pl_c_price_kg" step="1" oninput="applyPrice('c_price_kg',this.value)"><span>₽/кг</span></div>
+            <div class="price-field"><label>Заклёпка за шт</label><input type="number" id="pl_c_rib_rivet_price" step="0.1" oninput="applyPrice('c_rib_rivet_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Комплект (шпилька/шайба/гайка)</label><input type="number" id="pl_c_rib_stud_price" step="0.1" oninput="applyPrice('c_rib_stud_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Скотч за м/п</label><input type="number" id="pl_c_rib_tape_price" step="1" oninput="applyPrice('c_rib_tape_price',this.value)"><span>₽/м.п.</span></div>
+            <div class="price-field"><label>Герметик за м/п</label><input type="number" id="pl_c_rib_seal_price" step="1" oninput="applyPrice('c_rib_seal_price',this.value)"><span>₽/м.п.</span></div>
+            <div class="price-field"><label>Краска порошковая (кг)</label><input type="number" id="pl_c_powder_price_kg" step="1" oninput="applyPrice('c_powder_price_kg',this.value)"><span>₽/кг</span></div>
+            <div class="price-field"><label>Покраска порошковая (работа)</label><input type="number" id="pl_c_powder_work" step="1" oninput="applyPrice('c_powder_work',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>PVDF покрытие</label><input type="number" id="pl_c_pvdf_price" step="1" oninput="applyPrice('c_pvdf_price',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>PE покрытие</label><input type="number" id="pl_c_pe_price" step="1" oninput="applyPrice('c_pe_price',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Анодирование</label><input type="number" id="pl_c_anod_price" step="1" oninput="applyPrice('c_anod_price',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Нитрид титана</label><input type="number" id="pl_c_nitrid_price" step="1" oninput="applyPrice('c_nitrid_price',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Оксидирование</label><input type="number" id="pl_c_oxide_price" step="1" oninput="applyPrice('c_oxide_price',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Сублимация</label><input type="number" id="pl_c_sublim_price" step="1" oninput="applyPrice('c_sublim_price',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>КИТ</label><input type="number" id="pl_c_kit" step="1" oninput="applyPrice('c_kit',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Мех. обработка</label><input type="number" id="pl_c_work_mech" step="1" oninput="applyPrice('c_work_mech',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Вальцовка кассет</label><input type="number" id="pl_c_work_roll" step="1" oninput="applyPrice('c_work_roll',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Изготовление ребра</label><input type="number" id="pl_c_work_rib_make" step="1" oninput="applyPrice('c_work_rib_make',this.value)"><span>₽/м.п.</span></div>
+            <div class="price-field"><label>Установка заклёпки</label><input type="number" id="pl_c_work_rib_rivet" step="1" oninput="applyPrice('c_work_rib_rivet',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Установка комплекта</label><input type="number" id="pl_c_work_rib_stud" step="1" oninput="applyPrice('c_work_rib_stud',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Установка скотча</label><input type="number" id="pl_c_work_rib_tape" step="1" oninput="applyPrice('c_work_rib_tape',this.value)"><span>₽/м.п.</span></div>
+            <div class="price-field"><label>Установка герметика</label><input type="number" id="pl_c_work_rib_seal" step="1" oninput="applyPrice('c_work_rib_seal',this.value)"><span>₽/м.п.</span></div>
+            <div class="price-field"><label>Перфорация за 1 отв</label><input type="number" id="pl_c_perf_price" step="0.01" oninput="applyPrice('c_perf_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Упаковка</label><input type="number" id="pl_c_work_pack" step="1" oninput="applyPrice('c_work_pack',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Доставка</label><input type="number" id="pl_c_work_del" step="1" oninput="applyPrice('c_work_del',this.value)"><span>₽/м²</span></div>
+          </div>
         </div>
-        <div style="overflow-x:auto;">
-          <table id="prices-table" style="width:100%;border-collapse:collapse;font-size:11px;">
-            <thead>
-              <tr style="background:var(--bg);text-transform:uppercase;font-size:10px;color:var(--text-light);">
-                <td style="padding:6px 4px;width:30px;">#</td>
-                <td style="padding:6px 4px;">Категория</td>
-                <td style="padding:6px 4px;">Наименование</td>
-                <td style="padding:6px 4px;width:60px;">Ед.изм.</td>
-                <td style="padding:6px 4px;width:90px;">Цена, ₽</td>
-                <td style="padding:6px 4px;width:60px;">Удалить</td>
-              </tr>
-            </thead>
-            <tbody id="prices-body"></tbody>
-          </table>
+
+        <!-- МЕТАЛЛОКОНСТРУКЦИИ -->
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:700;color:#27ae60;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2a2a4a;">🔩 Металлоконструкции</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div class="price-field"><label>Металл за кг</label><input type="number" id="pl_m_price_kg" step="1" oninput="applyPrice('m_price_kg',this.value)"><span>₽/кг</span></div>
+            <div class="price-field"><label>Краска порошковая (кг)</label><input type="number" id="pl_m_powder_price_kg" step="1" oninput="applyPrice('m_powder_price_kg',this.value)"><span>₽/кг</span></div>
+            <div class="price-field"><label>Покраска порошковая (работа)</label><input type="number" id="pl_m_powder_work" step="1" oninput="applyPrice('m_powder_work',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Горячий цинк</label><input type="number" id="pl_m_hotzinc_price" step="1" oninput="applyPrice('m_hotzinc_price',this.value)"><span>₽/кг</span></div>
+          </div>
         </div>
-        <div style="margin-top:12px;font-size:11px;color:var(--text-light);" id="prices-stats"></div>
+
+        <!-- ОГРАЖДЕНИЯ КГХ -->
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:700;color:#e67e22;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2a2a4a;">🛡️ Ограждения КГХ</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div class="price-field"><label>Рама за кг</label><input type="number" id="pl_f_frame_price_kg" step="1" oninput="applyPrice('f_frame_price_kg',this.value)"><span>₽/кг</span></div>
+            <div class="price-field"><label>Сварка</label><input type="number" id="pl_f_weld_rate" step="1" oninput="applyPrice('f_weld_rate',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Покраска рамы</label><input type="number" id="pl_f_frame_paint_work" step="1" oninput="applyPrice('f_frame_paint_work',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Цинк</label><input type="number" id="pl_f_zinc_price" step="1" oninput="applyPrice('f_zinc_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Лист за кг</label><input type="number" id="pl_f_sheet_price_kg" step="1" oninput="applyPrice('f_sheet_price_kg',this.value)"><span>₽/кг</span></div>
+            <div class="price-field"><label>Перфорация за 1 отв</label><input type="number" id="pl_f_perf_price" step="0.01" oninput="applyPrice('f_perf_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Покраска листа</label><input type="number" id="pl_f_sheet_paint_work" step="1" oninput="applyPrice('f_sheet_paint_work',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>PE покрытие листа</label><input type="number" id="pl_f_sheet_pe_price" step="1" oninput="applyPrice('f_sheet_pe_price',this.value)"><span>₽/м²</span></div>
+            <div class="price-field"><label>Лазерная резка</label><input type="number" id="pl_f_laser_price" step="1" oninput="applyPrice('f_laser_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Стикер</label><input type="number" id="pl_f_sticker_price" step="1" oninput="applyPrice('f_sticker_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Хомут</label><input type="number" id="pl_f_clamp_price" step="1" oninput="applyPrice('f_clamp_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Болт</label><input type="number" id="pl_f_bolt_price" step="1" oninput="applyPrice('f_bolt_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Блок</label><input type="number" id="pl_f_block_price" step="1" oninput="applyPrice('f_block_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Упаковка</label><input type="number" id="pl_f_pack_price" step="1" oninput="applyPrice('f_pack_price',this.value)"><span>₽</span></div>
+            <div class="price-field"><label>Доставка</label><input type="number" id="pl_f_delivery_price" step="1" oninput="applyPrice('f_delivery_price',this.value)"><span>₽</span></div>
+          </div>
+        </div>
+
+        <div style="font-size:11px;color:var(--text-light);" id="prices-stats">Изменения применяются автоматически во все расчёты</div>
       </div>
     </div>
   </div>
@@ -4797,116 +4850,120 @@ async function resetUserPass(login) {
   alert(d.ok ? 'Пароль изменён' : d.error);
 }
 
+
 // ==================== ПРАЙС-ЛИСТ ====================
 
-let pricesData = {categories:[], items:[]};
+const PRICE_FIELDS = [
+  'c_price_kg','c_rib_rivet_price','c_rib_stud_price','c_rib_tape_price','c_rib_seal_price',
+  'c_powder_price_kg','c_powder_work','c_pvdf_price','c_pe_price','c_anod_price',
+  'c_nitrid_price','c_oxide_price','c_sublim_price','c_kit',
+  'c_work_mech','c_work_roll','c_work_rib_make','c_work_rib_rivet','c_work_rib_stud','c_work_rib_tape','c_work_rib_seal',
+  'c_perf_price','c_work_pack','c_work_del',
+  'm_price_kg','m_powder_price_kg','m_powder_work','m_hotzinc_price',
+  'f_frame_price_kg','f_weld_rate','f_frame_paint_work','f_zinc_price',
+  'f_sheet_price_kg','f_perf_price','f_sheet_paint_work','f_sheet_pe_price',
+  'f_laser_price','f_sticker_price','f_clamp_price','f_bolt_price','f_block_price','f_pack_price','f_delivery_price'
+];
 
-async function loadPrices() {
+const PRICE_LABELS = {
+  c_price_kg:'Алюминий за кг', c_rib_rivet_price:'Заклёпка', c_rib_stud_price:'Комплект шпилька/шайба/гайка',
+  c_rib_tape_price:'Скотч м/п', c_rib_seal_price:'Герметик м/п',
+  c_powder_price_kg:'Краска порошковая (кг)', c_powder_work:'Покраска порошковая (работа)',
+  c_pvdf_price:'PVDF', c_pe_price:'PE', c_anod_price:'Анодирование',
+  c_nitrid_price:'Нитрид титана', c_oxide_price:'Оксидирование', c_sublim_price:'Сублимация',
+  c_kit:'КИТ', c_work_mech:'Мех обработка', c_work_roll:'Вальцовка',
+  c_work_rib_make:'Изготовление ребра', c_work_rib_rivet:'Установка заклёпки',
+  c_work_rib_stud:'Установка комплекта', c_work_rib_tape:'Установка скотча',
+  c_work_rib_seal:'Установка герметика', c_perf_price:'Перфорация',
+  c_work_pack:'Упаковка (кассеты)', c_work_del:'Доставка (кассеты)',
+  m_price_kg:'Металл за кг (МК)', m_powder_price_kg:'Краска (МК)',
+  m_powder_work:'Покраска (МК)', m_hotzinc_price:'Горячий цинк',
+  f_frame_price_kg:'Рама за кг', f_weld_rate:'Сварка',
+  f_frame_paint_work:'Покраска рамы', f_zinc_price:'Цинк',
+  f_sheet_price_kg:'Лист за кг', f_perf_price:'Перфорация (огр)',
+  f_sheet_paint_work:'Покраска листа', f_sheet_pe_price:'PE покрытие листа',
+  f_laser_price:'Лазер', f_sticker_price:'Стикер', f_clamp_price:'Хомут',
+  f_bolt_price:'Болт', f_block_price:'Блок', f_pack_price:'Упаковка (огр)', f_delivery_price:'Доставка (огр)'
+};
+
+async function loadPriceList() {
   try {
     const r = await fetch('/api/prices');
-    if (r.ok) { pricesData = await r.json(); renderPrices(); }
+    if (!r.ok) return;
+    const data = await r.json();
+    PRICE_FIELDS.forEach(fid => {
+      if (data[fid] !== undefined) {
+        const el = document.getElementById(fid);
+        if (el) el.value = data[fid];
+        const plEl = document.getElementById('pl_' + fid);
+        if (plEl) plEl.value = data[fid];
+      }
+    });
+    document.getElementById('prices-stats').textContent = 'Загружено: ' + new Date().toLocaleString();
   } catch {}
 }
 
-function renderPrices(filter) {
-  const body = document.getElementById('prices-body');
-  const items = (pricesData.items || []).filter(item => {
-    if (!filter) return true;
-    const f = filter.toLowerCase();
-    return (item.name||'').toLowerCase().includes(f) || (item.category||'').toLowerCase().includes(f);
+function applyPrice(fid, val) {
+  const el = document.getElementById(fid);
+  if (el) el.value = val;
+}
+
+async function savePriceList() {
+  const data = {};
+  PRICE_FIELDS.forEach(fid => {
+    const plEl = document.getElementById('pl_' + fid);
+    if (plEl) data[fid] = parseFloat(plEl.value) || 0;
   });
-  body.innerHTML = items.map((item, i) => `
-    <tr style="border-bottom:1px solid #1a1a2e;">
-      <td style="padding:4px;color:#666;">${i+1}</td>
-      <td style="padding:4px;"><input type="text" value="${escHtml(item.category||'')}" onchange="pricesData.items[${pricesData.items.indexOf(item)}].category=this.value" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
-      <td style="padding:4px;"><input type="text" value="${escHtml(item.name||'')}" onchange="pricesData.items[${pricesData.items.indexOf(item)}].name=this.value" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
-      <td style="padding:4px;"><input type="text" value="${escHtml(item.unit||'')}" onchange="pricesData.items[${pricesData.items.indexOf(item)}].unit=this.value" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
-      <td style="padding:4px;"><input type="number" value="${item.price||0}" step="0.01" onchange="pricesData.items[${pricesData.items.indexOf(item)}].price=parseFloat(this.value)||0" style="width:100%;padding:3px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;"></td>
-      <td style="padding:4px;text-align:center;"><button onclick="pricesData.items.splice(${pricesData.items.indexOf(item)},1);renderPrices();" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;">✕</button></td>
-    </tr>`).join('');
-  document.getElementById('prices-stats').textContent = `Позиций: ${items.length} из ${(pricesData.items||[]).length}`;
-}
-
-function filterPrices() {
-  renderPrices(document.getElementById('price-search').value);
-}
-
-function addPriceRow() {
-  if (!pricesData.items) pricesData.items = [];
-  pricesData.items.push({category:'Общее', name:'', unit:'шт', price:0, note:''});
-  renderPrices();
-  const tbody = document.getElementById('prices-body');
-  const lastRow = tbody.lastElementChild;
-  if (lastRow) lastRow.querySelector('input').focus();
-}
-
-async function savePrices() {
-  const r = await fetch('/api/prices', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(pricesData)
-  });
+  const r = await fetch('/api/prices', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   if (r.ok) {
-    const d = await r.json();
-    document.getElementById('prices-stats').textContent = '✅ Сохранено! ' + new Date().toLocaleTimeString();
-    setTimeout(() => renderPrices(), 1500);
-  } else { alert('Ошибка сохранения'); }
+    document.getElementById('prices-stats').textContent = 'Сохранено: ' + new Date().toLocaleString();
+    PRICE_FIELDS.forEach(fid => { const el = document.getElementById(fid); if (el) el.value = data[fid]; });
+  } else alert('Ошибка сохранения');
 }
 
-async function exportPricesExcel() {
+async function exportPriceList() {
   if (typeof XLSX === 'undefined') {
     const s = document.createElement('script');
     s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
     document.head.appendChild(s);
     await new Promise(r => s.onload = r);
   }
-  const rows = [['Категория','Наименование','Ед.изм.','Цена (руб)']];
-  (pricesData.items || []).forEach(i => rows.push([i.category||'',i.name||'',i.unit||'',i.price||0]));
+  const rows = [['ID поля','Наименование','Значение']];
+  PRICE_FIELDS.forEach(fid => {
+    const plEl = document.getElementById('pl_' + fid);
+    rows.push([fid, PRICE_LABELS[fid] || fid, plEl ? plEl.value : '']);
+  });
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:20},{wch:40},{wch:10},{wch:15}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Прайс-лист');
-  XLSX.writeFile(wb, `Прайс_Эверест-Тех_${new Date().toISOString().slice(0,10)}.xlsx`);
+  ws['!cols'] = [{wch:30},{wch:35},{wch:15}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Прайс');
+  XLSX.writeFile(wb, 'Прайс_Эверест-Тех_' + new Date().toISOString().slice(0,10) + '.xlsx');
 }
 
-async function importPricesExcel(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+async function importPriceList(e) {
+  const file = e.target.files[0]; if (!file) return;
   if (typeof XLSX === 'undefined') {
     const s = document.createElement('script');
     s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
     document.head.appendChild(s);
     await new Promise(r => s.onload = r);
   }
-  const data = await file.arrayBuffer();
-  const wb = XLSX.read(data);
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws);
-  const items = rows.map(r => ({
-    category: r['Категория'] || r['Категория '] || 'Общее',
-    name: r['Наименование'] || '',
-    unit: r['Ед.изм.'] || r['Ед.изм'] || 'шт',
-    price: parseFloat(r['Цена (руб)'] || r['Цена'] || 0),
-    note: r['Примечание'] || ''
-  })).filter(i => i.name);
-  if (!items.length) { alert('Файл пуст или неверный формат. Нужны столбцы: Категория, Наименование, Ед.изм., Цена'); return; }
-  const r = await fetch('/api/prices/import', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({items})
+  const wb = XLSX.read(await file.arrayBuffer());
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  let n = 0;
+  rows.forEach(r => {
+    const fid = r['ID поля']; const val = parseFloat(r['Значение']);
+    if (!fid || isNaN(val)) return;
+    const plEl = document.getElementById('pl_' + fid);
+    if (plEl) { plEl.value = val; applyPrice(fid, val); n++; }
   });
-  const d = await r.json();
-  if (r.ok) {
-    alert(`Импортировано: ${d.added} новых. Всего: ${d.total}`);
-    loadPrices();
-  } else { alert(d.error); }
+  alert('Обновлено ' + n + ' позиций');
   e.target.value = '';
 }
 
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// Проверка авторизации при загрузке
-checkAuth();
+checkAuth().then(ok => { if (ok) loadPriceList(); });
 
 </script>
 </body>
