@@ -599,6 +599,7 @@
   <button class="tab-btn" onclick="switchTab('mk')">🔩 Металлоконструкции</button>
   <button class="tab-btn" onclick="switchTab('nesting')">✂️ Раскрой</button>
   <button class="tab-btn" onclick="switchTab('fencing')">🛡️ Ограждения КГХ</button>
+  <button class="tab-btn" onclick="switchTab('pipe')">🔧 Профильные трубы</button>
   <button class="tab-btn" onclick="switchTab('prices')">💰 Прайс-лист</button>
 </div>
 
@@ -760,6 +761,25 @@
       <div class="card-header"><div class="step-num">5</div><h3>Спецификация кассет</h3></div>
       <div class="card-body">
         <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;">Введите видимые размеры (A1×B1) и количество. Развёртка и Кт рассчитываются автоматически.</div>
+
+        <!-- Загрузка спецификации (48-столбцовый формат) -->
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-header"><div class="step-num">📋</div><h3>Спецификация из Excel</h3></div>
+          <div class="card-body">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+              <label style="padding:8px 16px;background:var(--green);color:#fff;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">
+                📂 Загрузить спецификацию
+                <input type="file" id="spec-file-full" accept=".xlsx,.xls" style="display:none;" onchange="handleFullSpecUpload(this)">
+              </label>
+              <button onclick="downloadSpecTemplate()" style="padding:8px 16px;background:var(--blue-light);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">📥 Скачать шаблон</button>
+            </div>
+            <div class="field-row" style="max-width:200px;">
+              <label>Шаг усиления, мм</label>
+              <input type="number" id="spec-reinforcement-step" value="600" min="100" step="50" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;" onchange="specData.reinforcementStep=parseFloat(this.value)||600">
+            </div>
+            <div id="spec-upload-status" style="font-size:11px;color:var(--green);margin-top:6px;display:none;"></div>
+          </div>
+        </div>
 
         <div id="cass-spec-toggle" class="collapse-toggle" onclick="toggleCollapse('cass-spec')">
           <span><span class="arrow">▼</span> Таблица кассет</span>
@@ -1477,6 +1497,27 @@
           <div class="value" id="r-c-final-2">—</div>
         </div>
 
+        <!-- 4 единицы стоимости из спецификации -->
+        <div id="spec-cost-units" style="margin-top:12px;display:none;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;text-align:center;margin-bottom:6px;">Единицы стоимости (по спецификации)</div>
+          <div class="result-final">
+            <div class="label">Стоимость за м² проекции</div>
+            <div class="value" id="r-c-per-m2-proj">—</div>
+          </div>
+          <div class="result-final">
+            <div class="label">Стоимость за м² видимой</div>
+            <div class="value" id="r-c-per-m2-vis">—</div>
+          </div>
+          <div class="result-final">
+            <div class="label">Стоимость за м² развёртки</div>
+            <div class="value" id="r-c-per-m2-dev">—</div>
+          </div>
+          <div class="result-final">
+            <div class="label">Стоимость за штуку</div>
+            <div class="value" id="r-c-per-pcs">—</div>
+          </div>
+        </div>
+
         <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px">за 1 м²</div>
       </div>
 
@@ -2098,7 +2139,105 @@
     </div>
   </div>
 </div>
+
+<!-- ═══ ТРУБЫ: РАСКРОЙ ═══ -->
+<div class="card" style="margin-top:24px;">
+  <div class="card-header" style="cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+    <h3>🔧 Раскрой профильных труб</h3>
+  </div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div>
+        <label class="field-label">Стандартная длина хлыста (мм)</label>
+        <input type="number" id="pn-bar-len" value="6000" min="100" oninput="calcPipeNesting()" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;">
+      </div>
+      <div>
+        <label class="field-label">Ширина пропила (мм)</label>
+        <input type="number" id="pn-cut-width" value="3" min="1" oninput="calcPipeNesting()" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;">
+      </div>
+    </div>
+
+    <label class="field-label">Заготовки (длина × количество)</label>
+    <div id="pn-parts-list">
+      <div class="pn-part-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+        <input type="number" placeholder="Длина (мм)" min="1" class="pn-part-len" oninput="calcPipeNesting()" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:6px;">
+        <input type="number" placeholder="Кол-во" min="1" value="1" class="pn-part-qty" oninput="calcPipeNesting()" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;">
+        <button onclick="this.parentElement.remove();calcPipeNesting()" style="padding:8px 12px;background:#c0392b;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+    </div>
+    <button onclick="addPipePart()" style="padding:8px 16px;background:var(--orange);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-bottom:14px;">+ Добавить заготовку</button>
+
+    <div class="r-row"><span class="r-label">Всего заготовок</span><span class="r-val" id="pn-total-parts">0</span></div>
+    <div class="r-row"><span class="r-label">Общая длина заготовок</span><span class="r-val" id="pn-total-len">0 мм</span></div>
+    <div class="r-row"><span class="r-label">Количество хлыстов</span><span class="r-val" id="pn-bars-needed">0</span></div>
+    <div class="r-row"><span class="r-label">Общий расход (с пропилами)</span><span class="r-val" id="pn-total-used">0 мм</span></div>
+    <div class="r-row"><span class="r-label">Отходы</span><span class="r-val" id="pn-waste-pct">0%</span></div>
+  </div>
+</div>
+
 </div><!-- /tab-nesting -->
+
+<!-- ═══════════════════════════════════════════
+     TAB: ПРОФИЛЬНЫЕ ТРУБЫ
+════════════════════════════════════════════ -->
+<div id="tab-pipe" class="hidden">
+<div class="main">
+  <div class="left-col">
+    <div class="card">
+      <div class="card-header"><h3>🔧 Расчёт профильной трубы</h3></div>
+      <div class="card-body">
+        <label class="field-label">Сечение трубы</label>
+        <select id="pipe_section" onchange="pipeOnSectionChange()" style="width:100%;padding:8px;margin-bottom:10px;border:1px solid var(--border);border-radius:6px;background:#fff;">
+          <option value="50x50">50 × 50</option>
+          <option value="40x20">40 × 20</option>
+          <option value="30x30">30 × 30</option>
+          <option value="60x40">60 × 40</option>
+          <option value="100x50">100 × 50</option>
+          <option value="custom">Другое (ручной ввод)</option>
+        </select>
+        <div id="pipe-custom-dims" style="display:none;margin-bottom:10px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" id="pipe_a" placeholder="A (мм)" min="5" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;">
+            <span style="font-weight:600;">×</span>
+            <input type="number" id="pipe_b" placeholder="B (мм)" min="5" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;">
+          </div>
+        </div>
+
+        <label class="field-label">Толщина стенки (мм)</label>
+        <input type="number" id="pipe_thickness" value="2" min="0.5" step="0.5" oninput="calcPipe()" style="width:100%;padding:8px;margin-bottom:10px;border:1px solid var(--border);border-radius:6px;">
+
+        <label class="field-label">Длина заготовки (мм)</label>
+        <input type="number" id="pipe_length" value="1000" min="1" oninput="calcPipe()" style="width:100%;padding:8px;margin-bottom:10px;border:1px solid var(--border);border-radius:6px;">
+
+        <label class="field-label">Количество (шт)</label>
+        <input type="number" id="pipe_qty" value="10" min="1" oninput="calcPipe()" style="width:100%;padding:8px;margin-bottom:10px;border:1px solid var(--border);border-radius:6px;">
+
+        <label class="field-label">Материал</label>
+        <select id="pipe_material" onchange="calcPipe()" style="width:100%;padding:8px;margin-bottom:14px;border:1px solid var(--border);border-radius:6px;background:#fff;">
+          <option value="al">Алюминий</option>
+          <option value="steel">Сталь</option>
+          <option value="zinc">Оцинкованная сталь</option>
+          <option value="nsteel">Нержавеющая сталь</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="right-col">
+    <div class="card">
+      <div class="card-header"><h3>📋 Результат</h3></div>
+      <div class="card-body">
+        <div class="r-row"><span class="r-label">Периметр сечения</span><span class="r-val" id="pipe-perimeter">200 мм</span></div>
+        <div class="r-row"><span class="r-label">Вес 1 м.п.</span><span class="r-val" id="pipe-weight-mp">—</span></div>
+        <div class="r-row"><span class="r-label">Вес заготовки</span><span class="r-val" id="pipe-weight-piece">—</span></div>
+        <div class="r-row"><span class="r-label">Общий вес</span><span class="r-val" id="pipe-weight-total">—</span></div>
+        <div class="r-row"><span class="r-label">Общая длина</span><span class="r-val" id="pipe-length-total">—</span></div>
+        <div class="r-row"><span class="r-label">Цена за кг</span><span class="r-val" id="pipe-price-kg">—</span></div>
+        <div class="r-row" style="border-top:2px solid var(--orange);margin-top:8px;padding-top:10px;"><span class="r-label" style="font-weight:700;font-size:15px;">Стоимость</span><span class="r-val" id="pipe-cost" style="font-weight:700;font-size:18px;color:var(--orange);">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 
 <!-- ═══════════════════════════════════════════
      TAB: ОГРАЖДЕНИЯ КГХ
@@ -2433,6 +2572,13 @@ const MATERIALS = {
   corten:{ density: 7.85, price: 150,  label: 'Кортен' },
 };
 
+const PIPE_MATERIALS = {
+  al:    { density: 2700, price: 320,  label: 'Алюминий',             pipePriceKey: 'pipe_al' },
+  steel: { density: 7850, price: 90,   label: 'Сталь',                pipePriceKey: 'pipe_steel' },
+  zinc:  { density: 7850, price: 130,  label: 'Оцинкованная сталь',  pipePriceKey: 'pipe_zinc' },
+  nsteel:{ density: 7930, price: 600,  label: 'Нержавеющая сталь',   pipePriceKey: 'pipe_nsteel' },
+};
+
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
@@ -2453,6 +2599,7 @@ function switchTab(tab) {
   document.getElementById('tab-mk').classList.toggle('hidden', tab !== 'mk');
   document.getElementById('tab-nesting').classList.toggle('hidden', tab !== 'nesting');
   document.getElementById('tab-fencing').classList.toggle('hidden', tab !== 'fencing');
+  document.getElementById('tab-pipe').classList.toggle('hidden', tab !== 'pipe');
   document.getElementById('tab-prices').classList.toggle('hidden', tab !== 'prices');
   if (tab === 'prices') loadPrices();
 }
@@ -4853,6 +5000,13 @@ const PRICE_SECTIONS = [
     {id:'rib_inst_tape', label:'Установка 1 м/п скотча',            unit:'руб/м.п.', input:'c_work_rib_tape', def:0},
     {id:'rib_inst_seal', label:'Установка 1 м/п герметика',         unit:'руб/м.п.', input:'c_work_rib_seal', def:0},
   ]},
+  // 🔩 МАТЕРИАЛЫ ТРУБ
+  {title:'🔩 МАТЕРИАЛЫ ТРУБ (за кг)', rows:[
+    {id:'pipe_al',    label:'Алюминий (труба)',              unit:'руб/кг', pipeMatKey:'al',    def:320},
+    {id:'pipe_steel', label:'Сталь (труба)',                 unit:'руб/кг', pipeMatKey:'steel', def:90},
+    {id:'pipe_zinc',  label:'Оцинкованная сталь (труба)',    unit:'руб/кг', pipeMatKey:'zinc',  def:130},
+    {id:'pipe_nsteel',label:'Нержавеющая сталь (труба)',     unit:'руб/кг', pipeMatKey:'nsteel',def:600},
+  ]},
 ];
 
 function renderPriceTable() {
@@ -4862,7 +5016,7 @@ function renderPriceTable() {
     html += '<tr><td colspan="5" style="padding:12px 4px 6px;font-size:13px;font-weight:700;color:#667eea;">' + sec.title + '</td></tr>';
     html += '<tr style="background:var(--bg);font-size:10px;color:var(--text-light);text-transform:uppercase;"><td>Параметр</td><td>Единица</td><td>Текущее значение</td><td>Актуальная цена →</td><td></td></tr>';
     sec.rows.forEach(r => {
-      const curVal = r.input ? (document.getElementById(r.input)?.value || '') : (r.matKey ? (MATERIALS[r.matKey]?.price || '') : '');
+      const curVal = r.input ? (document.getElementById(r.input)?.value || '') : (r.matKey ? (MATERIALS[r.matKey]?.price || '') : (r.pipeMatKey ? (PIPE_MATERIALS[r.pipeMatKey]?.price || '') : ''));
       html += '<tr style="border-bottom:1px solid #eee;">';
       html += '<td style="padding:5px 4px;">' + r.label + '</td>';
       html += '<td style="padding:5px 4px;color:var(--text-light);font-size:10px;">' + r.unit + '</td>';
@@ -4901,6 +5055,9 @@ function applyAllPrices() {
     if (r.matKey && MATERIALS[r.matKey]) {
       MATERIALS[r.matKey].price = val;
     }
+    if (r.pipeMatKey && PIPE_MATERIALS[r.pipeMatKey]) {
+      PIPE_MATERIALS[r.pipeMatKey].price = val;
+    }
   }));
 }
 
@@ -4931,7 +5088,7 @@ async function exportPriceList() {
     rows.push(['Параметр','Единица','Текущее значение','Актуальная цена']);
     sec.rows.forEach(r => {
       const plEl = document.getElementById('pl_' + r.id);
-      const cur = r.input ? (document.getElementById(r.input)?.value || '') : (r.matKey ? (MATERIALS[r.matKey]?.price || '') : '');
+      const cur = r.input ? (document.getElementById(r.input)?.value || '') : (r.matKey ? (MATERIALS[r.matKey]?.price || '') : (r.pipeMatKey ? (PIPE_MATERIALS[r.pipeMatKey]?.price || '') : ''));
       rows.push([r.label, r.unit, cur, plEl ? plEl.value : '']);
     });
     rows.push([]);
@@ -4973,7 +5130,433 @@ async function importPriceList(e) {
 
 checkAuth().then(ok => { if (ok) loadPriceList(); });
 
+// ═══════════════════════════════════════════
+// ПРОФИЛЬНЫЕ ТРУБЫ
+// ═══════════════════════════════════════════
+function pipeOnSectionChange() {
+  const sel = document.getElementById('pipe_section').value;
+  document.getElementById('pipe-custom-dims').style.display = sel === 'custom' ? '' : 'none';
+  calcPipe();
+}
 
+function pipeGetDims() {
+  const sel = document.getElementById('pipe_section').value;
+  if (sel === 'custom') {
+    return { a: parseFloat(document.getElementById('pipe_a').value) || 50, b: parseFloat(document.getElementById('pipe_b').value) || 50 };
+  }
+  const [a, b] = sel.split('x').map(Number);
+  return { a, b };
+}
+
+function calcPipe() {
+  const { a, b } = pipeGetDims();
+  const t = parseFloat(document.getElementById('pipe_thickness').value) || 0;
+  const len = parseFloat(document.getElementById('pipe_length').value) || 0;
+  const qty = parseInt(document.getElementById('pipe_qty').value) || 0;
+  const matKey = document.getElementById('pipe_material').value;
+  const mat = PIPE_MATERIALS[matKey];
+  if (!mat || t <= 0 || len <= 0) { resetPipeResult(); return; }
+
+  const perimeter_mm = (a + b) * 2;
+  const perimeter_m = perimeter_mm / 1000;
+  const weight_mp = perimeter_m * (t / 1000) * mat.density; // кг/м.п.
+  const weight_piece = weight_mp * (len / 1000);
+  const total_weight = weight_piece * qty;
+  const total_length = (len * qty) / 1000;
+  const cost = total_weight * mat.price;
+
+  document.getElementById('pipe-perimeter').textContent = perimeter_mm + ' мм';
+  document.getElementById('pipe-weight-mp').textContent = weight_mp.toFixed(3) + ' кг/м';
+  document.getElementById('pipe-weight-piece').textContent = weight_piece.toFixed(3) + ' кг';
+  document.getElementById('pipe-weight-total').textContent = total_weight.toFixed(2) + ' кг';
+  document.getElementById('pipe-length-total').textContent = total_length.toFixed(1) + ' м.п.';
+  document.getElementById('pipe-price-kg').textContent = mat.price + ' руб/кг';
+  document.getElementById('pipe-cost').textContent = cost.toFixed(0) + ' руб';
+}
+
+function resetPipeResult() {
+  ['pipe-perimeter','pipe-weight-mp','pipe-weight-piece','pipe-weight-total','pipe-length-total','pipe-price-kg','pipe-cost'].forEach(id => {
+    document.getElementById(id).textContent = '—';
+  });
+}
+
+// ТРУБЫ: РАСКРОЙ
+function addPipePart() {
+  const container = document.getElementById('pn-parts-list');
+  const row = document.createElement('div');
+  row.className = 'pn-part-row';
+  row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+  row.innerHTML = '<input type="number" placeholder="Длина (мм)" min="1" class="pn-part-len" oninput="calcPipeNesting()" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:6px;"><input type="number" placeholder="Кол-во" min="1" value="1" class="pn-part-qty" oninput="calcPipeNesting()" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;"><button onclick="this.parentElement.remove();calcPipeNesting()" style="padding:8px 12px;background:#c0392b;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:16px;">✕</button>';
+  container.appendChild(row);
+}
+
+function calcPipeNesting() {
+  const barLen = parseFloat(document.getElementById('pn-bar-len').value) || 6000;
+  const cutW = parseFloat(document.getElementById('pn-cut-width').value) || 3;
+  const rows = document.querySelectorAll('.pn-part-row');
+
+  // Collect all parts flattened
+  let parts = [];
+  rows.forEach(row => {
+    const len = parseFloat(row.querySelector('.pn-part-len').value) || 0;
+    const qty = parseInt(row.querySelector('.pn-part-qty').value) || 0;
+    for (let i = 0; i < qty; i++) {
+      if (len > 0) parts.push(len);
+    }
+  });
+
+  if (parts.length === 0) {
+    ['pn-total-parts','pn-total-len','pn-bars-needed','pn-total-used','pn-waste-pct'].forEach(id => document.getElementById(id).textContent = '0');
+    return;
+  }
+
+  // Sort descending (first-fit decreasing)
+  parts.sort((a, b) => b - a);
+
+  const bars = []; // each bar: remaining length
+  for (const part of parts) {
+    const partWithCut = part + cutW;
+    let placed = false;
+    for (let i = 0; i < bars.length; i++) {
+      if (bars[i] >= partWithCut) {
+        bars[i] -= partWithCut;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      bars.push(barLen - partWithCut);
+    }
+  }
+
+  const barsNeeded = bars.length;
+  const totalUsed = barsNeeded * barLen;
+  const totalPartsLen = parts.reduce((s, p) => s + p, 0);
+  const cuts = parts.length > 0 ? parts.length - 1 : 0; // cuts between parts on same bar approx
+  // More accurate: total cuts = sum of (parts_on_bar - 1) per bar... simplified
+  const wastePct = totalUsed > 0 ? ((totalUsed - totalPartsLen) / totalUsed * 100) : 0;
+
+  document.getElementById('pn-total-parts').textContent = parts.length;
+  document.getElementById('pn-total-len').textContent = totalPartsLen + ' мм';
+  document.getElementById('pn-bars-needed').textContent = barsNeeded;
+  document.getElementById('pn-total-used').textContent = totalUsed + ' мм';
+  document.getElementById('pn-waste-pct').textContent = wastePct.toFixed(1) + '%';
+}
+
+
+// ==================== ЗАГРУЗКА СПЕЦИФИКАЦИИ (Excel) ====================
+
+let specData = { units: [], reinforcementStep: 600 };
+
+async function importSpecFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise((r, j) => { s.onload = r; s.onerror = j; });
+  }
+
+  const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false, cellNF: true });
+
+  // Вкладка «Шаг»
+  if (wb.Sheets['Шаг']) {
+    const stepData = XLSX.utils.sheet_to_json(wb.Sheets['Шаг'], { header: 1, raw: true, defval: '' });
+    if (stepData.length > 0 && stepData[0].length > 1) {
+      const step = parseFloat(stepData[0][1]);
+      if (step > 0) specData.reinforcementStep = step;
+    }
+  }
+
+  // Вкладка «СП.» — raw:false чтобы получить вычисленные значения формул
+  const wsName = wb.SheetNames.find(n => n.includes('СП')) || wb.SheetNames[0];
+  const ws = wb.Sheets[wsName];
+  const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+
+  let currentUnit = null;
+  specData.units = [];
+
+  for (let i = 0; i < rawRows.length; i++) {
+    const r = rawRows[i];
+    const colA = String(r[0] ?? '').trim();
+
+    if (!colA && (!r[1] || String(r[1]).trim() === '')) continue;
+    if (colA.toLowerCase() === '№' || colA.toLowerCase() === '#') continue;
+
+    // Продажная единица: A пустой
+    if (colA === '' && String(r[1] ?? '').trim() !== '') {
+      currentUnit = {
+        name: String(r[1]).trim(),
+        marking: String(r[2] ?? '').trim(),
+        panelConsumption: parseFloat(r[3]) || 0,
+        cassetteConsumption: parseFloat(r[4]) || 0,
+        cassettesPerPanel: parseFloat(r[5]) || 0,
+        qty: parseInt(r[6]) || 0,
+        projH: parseFloat(r[7]) || 0,
+        projW: parseFloat(r[8]) || 0,
+        visH: Array.from({length:5}, j => parseFloat(r[9+j]) || 0),
+        visW: Array.from({length:5}, j => parseFloat(r[14+j]) || 0),
+        shelvesH: Array.from({length:10}, j => parseFloat(r[19+j]) || 0),
+        shelvesW: Array.from({length:10}, j => parseFloat(r[29+j]) || 0),
+        children: []
+      };
+      specData.units.push(currentUnit);
+      continue;
+    }
+
+    // Дочерняя деталь: A начинается с точки
+    if (colA.startsWith('.') && currentUnit) {
+      const detail = {
+        marking: colA,
+        type: parseSpecDetailType(colA),
+        name: String(r[1] ?? '').trim(),
+        qty: parseInt(r[6]) || 0,
+        panelConsumption: parseFloat(r[3]) || 0,
+        cassetteConsumption: parseFloat(r[4]) || 0,
+        devH: parseFloat(r[39]) || 0,   // AN
+        devW: parseFloat(r[40]) || 0,   // AO
+        materialMark: String(r[41] ?? '').trim().toLowerCase(), // AP
+        partType: String(r[42] ?? '').trim(), // AQ: Лист / Труба
+        section: String(r[43] ?? '').trim(), // AR
+        thick: parseFloat(r[44]) || 0, // AS
+        color: String(r[45] ?? '').trim(), // AT
+        coating: String(r[46] ?? '').trim(), // AU
+        fastening: String(r[47] ?? '').trim(), // AV
+      };
+      detail.weight = calcSpecPartWeight(detail);
+      currentUnit.children.push(detail);
+    }
+  }
+
+  fillCassetteTableFromSpec();
+  if (typeof calcCassette === 'function') calcCassette();
+  input.value = '';
+  return specData;
+}
+
+function parseSpecDetailType(m) {
+  if (m.startsWith('.К')) return 'cassette';
+  if (m.startsWith('.уПр')) return 'rib_long';
+  if (m.startsWith('.уПп')) return 'rib_cross';
+  if (m.startsWith('.Тр')) return 'tube';
+  if (m.startsWith('.уВ')) return 'rib_vertical';
+  if (m.startsWith('.уОрт')) return 'rib_ortho';
+  return 'other';
+}
+
+function specMaterialToKey(mk) {
+  const m = mk.toLowerCase();
+  if (m.includes('алюм') || m.includes('алю')) return 'al';
+  if (m.includes('нерж') || m.includes('304')) return 'n304s';
+  if (m.includes('оцинк') || m.includes('цинк')) return 'zinc';
+  if (m.includes('сталь') || m.includes('ст3') || m.includes('чёрн')) return 'st3';
+  if (m.includes('медь')) return 'copper';
+  if (m.includes('латун')) return 'brass';
+  if (m.includes('кортен')) return 'corten';
+  return 'al';
+}
+
+function specTubeMaterialToKey(mk) {
+  const m = mk.toLowerCase();
+  if (m.includes('нерж') || m.includes('304')) return 'tube_nst';
+  if (m.includes('оцинк') || m.includes('цинк')) return 'tube_zinc';
+  if (m.includes('алюм') || m.includes('алю')) return 'tube_al';
+  return 'tube_st';
+}
+
+function calcSpecPartWeight(d) {
+  if ((d.devH <= 0 && d.devW <= 0) || d.thick <= 0) return 0;
+  const density = 7.85;
+  if (d.partType === 'Труба' || d.type === 'tube') {
+    const length = Math.max(d.devH, d.devW);
+    const perim = parseSectionPerimeter(d.section);
+    return length * perim * d.thick * density / 1e6;
+  }
+  return d.devH * d.devW * d.thick * density / 1e6;
+}
+
+function parseSectionPerimeter(s) {
+  if (!s) return 200;
+  const m = s.match(/(\d+)\s*[xх×]\s*(\d+)/);
+  if (m) return 2 * (parseInt(m[1]) + parseInt(m[2]));
+  const v = parseInt(s);
+  return v > 0 ? 4 * v : 200;
+}
+
+function specRibLength(d) {
+  return Math.max(d.devH, d.devW);
+}
+
+function fillCassetteTableFromSpec() {
+  const tbody = document.getElementById('ct-spec-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  let count = 0;
+  specData.units.forEach(u => {
+    const cassettes = u.children.filter(c => c.type === 'cassette');
+    if (cassettes.length === 0 && u.visH[0] > 0 && u.visW[0] > 0) {
+      count++;
+      addSpecRow(count, u.name, u.visH[0], u.visW[0], u.qty || 1);
+      return;
+    }
+    cassettes.forEach(c => {
+      count++;
+      addSpecRow(count, c.name || u.name, c.devH > 0 ? c.devH : u.visH[0], c.devW > 0 ? c.devW : u.visW[0], c.qty || u.qty || 1);
+    });
+  });
+  if (count === 0 && typeof ctAddRow === 'function') ctAddRow();
+  if (typeof calcTypeSpec === 'function') calcTypeSpec();
+}
+
+function addSpecRow(n, name, h, w, qty) {
+  const tbody = document.getElementById('ct-spec-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td style="padding:4px;color:var(--text-light);text-align:center;">${n}</td><td><input type="text" value="${name||'Кассета '+n}" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td><td><input type="number" value="${h}" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td><td><input type="number" value="${w}" min="50" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td><td><input type="number" value="${qty}" min="1" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="calcTypeSpec()"></td><td style="padding:4px;text-align:center;color:var(--green);font-weight:600;font-size:11px;" class="ct-dev">—</td><td style="padding:4px;text-align:center;color:var(--orange);font-weight:700;font-size:12px;" class="ct-kt">—</td><td><button onclick="ctDelRow(this)" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function calcSpecTubeCost() {
+  let total = 0;
+  specData.units.forEach(u => {
+    u.children.filter(c => c.type === 'tube').forEach(tube => {
+      const matKey = specTubeMaterialToKey(tube.materialMark);
+      const tubeSec = PRICE_SECTIONS.find(s => s.title && s.title.includes('ТРУБ'));
+      if (!tubeSec) return;
+      const row = tubeSec.rows.find(r => r.matKey === matKey);
+      if (!row) return;
+      const plEl = document.getElementById('pl_' + row.id);
+      const priceKg = plEl ? (parseFloat(plEl.value) || row.def) : row.def;
+      total += tube.weight * priceKg * (tube.qty || 1);
+    });
+  });
+  return total;
+}
+
+function calcSpecFactoryCoatingArea() {
+  const factoryTypes = ['PVDF','PE','анодирование','нитрид','оксид','сублимация'];
+  let hasFactory = false, area = 0;
+  specData.units.forEach(u => {
+    u.children.forEach(ch => {
+      if (factoryTypes.some(t => ch.coating.toLowerCase().includes(t.toLowerCase()))) hasFactory = true;
+      if (ch.devH > 0 && ch.devW > 0) area += ch.devH * ch.devW / 1e6 * (ch.qty || 1);
+    });
+  });
+  return hasFactory ? area : 0;
+}
+
+function calcSpecPowderCoatingArea() {
+  let area = 0;
+  specData.units.forEach(u => {
+    u.children.forEach(ch => {
+      if (ch.coating.toLowerCase().includes('порошковое') && ch.devH > 0 && ch.devW > 0) {
+        area += ch.devH * ch.devW / 1e6 * (ch.qty || 1);
+      }
+    });
+  });
+  return area;
+}
+
+// ==================== UI ЗАГРУЗКИ СПЕЦИФИКАЦИИ ====================
+
+async function handleFullSpecUpload(input) {
+  const statusEl = document.getElementById('spec-upload-status');
+  statusEl.style.display = 'none';
+  try {
+    // Синхронизируем шаг
+    specData.reinforcementStep = parseFloat(document.getElementById('spec-reinforcement-step').value) || 600;
+    await importSpecFile(input);
+    const count = specData.units.length;
+    statusEl.textContent = '✅ Загружено единиц: ' + count;
+    statusEl.style.display = 'block';
+    updateSpecCostUnits();
+  } catch(e) {
+    statusEl.textContent = '❌ Ошибка загрузки: ' + e.message;
+    statusEl.style.color = 'var(--red)';
+    statusEl.style.display = 'block';
+  }
+}
+
+function updateSpecCostUnits() {
+  const block = document.getElementById('spec-cost-units');
+  if (!specData.units.length) { block.style.display = 'none'; return; }
+  block.style.display = 'block';
+
+  // Собираем итоговые площади из спецификации
+  let totalProj = 0, totalVis = 0, totalDev = 0, totalQty = 0;
+  specData.units.forEach(u => {
+    const qty = u.qty || 1;
+    totalQty += qty;
+    // Проекция
+    if (u.projH > 0 && u.projW > 0) totalProj += (u.projH * u.projW / 1e6) * qty;
+    // Видимая
+    if (u.visH[0] > 0 && u.visW[0] > 0) totalVis += (u.visH[0] * u.visW[0] / 1e6) * qty;
+    // Развёртка — сумма всех дочерних деталей (кроме труб)
+    u.children.forEach(ch => {
+      if (ch.type !== 'tube' && ch.devH > 0 && ch.devW > 0) {
+        totalDev += (ch.devH * ch.devW / 1e6) * (ch.qty || qty);
+      }
+    });
+  });
+
+  // Берём полную стоимость из итогового блока
+  const finalVal = document.getElementById('r-c-final-1')?.textContent;
+  const totalCost = parseRubToNum(finalVal);
+  if (!totalCost || totalCost <= 0) return;
+
+  const fmt = v => v > 0 ? (totalCost / v).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ₽' : '—';
+  document.getElementById('r-c-per-m2-proj').textContent = fmt(totalProj);
+  document.getElementById('r-c-per-m2-vis').textContent = fmt(totalVis);
+  document.getElementById('r-c-per-m2-dev').textContent = fmt(totalDev);
+  document.getElementById('r-c-per-pcs').textContent = totalQty > 0 ? (totalCost / totalQty).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ₽/шт' : '—';
+}
+
+function parseRubToNum(s) {
+  if (!s || s === '—') return 0;
+  return parseFloat(String(s).replace(/[^0-9.,]/g '').replace(/,/g, '.')) || 0;
+}
+
+function downloadSpecTemplate() {
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    document.head.appendChild(s);
+  }
+  const wb = XLSX.utils.book_new();
+
+  // Вкладка «СП.» — 48 столбцов (A-AV)
+  const headers = [
+    '№','Наименование','Марка','Расх.листа','Расх.кассеты','Кассет в панели','Кол-во',
+    'Высота проекц.(H)','Ширина проекц.(W)',
+    'Вид.В1','Вид.В2','Вид.В3','Вид.В4','Вид.В5',
+    'Вид.Ш1','Вид.Ш2','Вид.Ш3','Вид.Ш4','Вид.Ш5',
+    'Полка.1','Полка.2','Полка.3','Полка.4','Полка.5','Полка.6','Полка.7','Полка.8','Полка.9','Полка.10',
+    'Полк.Ш1','Полк.Ш2','Полк.Ш3','Полк.Ш4','Полк.Ш5','Полк.Ш6','Полк.Ш7','Полк.Ш8','Полк.Ш9','Полк.Ш10',
+    'Разв.В(AN)','Разв.Ш(AO)',
+    'Марка мат-ла(AP)','Тип дет.(AQ)','Сечение(AR)','Толщ.(AS)','Цвет(AT)','Покрытие(AU)','Крепление(AV)'
+  ];
+
+  const wsData = [headers, Array(48).fill('')];
+  wsData[1][0] = '1'; // пример №
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Формулы AN (col 39) и AO (col 40) для строки 2
+  ws['AN2'] = { f: 'SUM(T2:AC2)+SUM(J2:N2)+H2' };
+  ws['AO2'] = { f: 'SUM(AD2:AM2)+SUM(O2:S2)+I2' };
+
+  // Ширины столбцов
+  ws['!cols'] = headers.map((h,i) => ({ wch: i < 7 ? 14 : i < 9 ? 16 : (i < 39 ? 8 : 12) }));
+  XLSX.utils.book_append_sheet(wb, ws, 'СП.');
+
+  // Вкладка «Шаг»
+  const stepData = [['Шаг усиления, мм', 600]];
+  const wsStep = XLSX.utils.aoa_to_sheet(stepData);
+  wsStep['!cols'] = [{ wch: 20 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, wsStep, 'Шаг');
+
+  XLSX.writeFile(wb, 'Шаблон_спецификации_Эверест.xlsx');
+}
 
 </script>
 </body>
