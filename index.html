@@ -5270,10 +5270,19 @@ async function importSpecFile(input) {
     }
   }
 
-  // Вкладка «СП.» — raw:false чтобы получить вычисленные значения формул
+  // Вкладка «СП.»
   const wsName = wb.SheetNames.find(n => n.includes('СП')) || wb.SheetNames[0];
   const ws = wb.Sheets[wsName];
-  const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+
+  // SheetJS не вычисляет формулы — берём raw (формулы) и парсим сами
+  // или если файл открыт в Excel и пересохранён — raw:false даст вычисленные значения
+  let rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+
+  // Проверяем есть ли данные (если все пустые — попробуем raw:true)
+  let hasData = rawRows.some(row => row.some(cell => cell !== '' && cell !== null && cell !== undefined));
+  if (!hasData) {
+    rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+  }
 
   let currentUnit = null;
   specData.units = [];
@@ -5463,16 +5472,25 @@ function calcSpecPowderCoatingArea() {
 async function handleFullSpecUpload(input) {
   const statusEl = document.getElementById('spec-upload-status');
   statusEl.style.display = 'none';
+async function handleFullSpecUpload(input) {
+  const statusEl = document.getElementById('spec-upload-status');
+  if (!statusEl) return;
+  statusEl.style.display = 'none';
+  statusEl.style.color = 'var(--text)';
   try {
-    // Синхронизируем шаг
-    specData.reinforcementStep = parseFloat(document.getElementById('spec-reinforcement-step').value) || 600;
+    specData.reinforcementStep = parseFloat(document.getElementById('spec-reinforcement-step')?.value) || 600;
     await importSpecFile(input);
     const count = specData.units.length;
-    statusEl.textContent = '✅ Загружено единиц: ' + count;
+    if (count === 0) {
+      statusEl.textContent = '⚠️ Файл прочитан, но единицы не найдены. Проверьте формат: столбец A пустой = продажная единица, точка в A (.К1) = деталь. Файл должен быть пересохранён в Excel.';
+      statusEl.style.display = 'block';
+      return;
+    }
+    statusEl.textContent = '✅ Загружено: ' + count + ' ед., ' + specData.units.reduce((s,u)=>s+u.children.length,0) + ' дет.';
     statusEl.style.display = 'block';
     updateSpecCostUnits();
   } catch(e) {
-    statusEl.textContent = '❌ Ошибка загрузки: ' + e.message;
+    statusEl.textContent = '❌ ' + e.message;
     statusEl.style.color = 'var(--red)';
     statusEl.style.display = 'block';
   }
