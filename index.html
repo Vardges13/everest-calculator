@@ -5294,8 +5294,9 @@ async function importSpecFile(input) {
     if (!colA && (!r[1] || String(r[1]).trim() === '')) continue;
     if (colA.toLowerCase() === '№' || colA.toLowerCase() === '#') continue;
 
-    // Продажная единица: A пустой
-    if (colA === '' && String(r[1] ?? '').trim() !== '') {
+    // Продажная единица: A = число (1, 2, 3...) или пустое
+    const isNumericA = colA !== '' && !isNaN(colA) && !colA.startsWith('.');
+    if ((isNumericA || colA === '') && String(r[1] ?? '').trim() !== '') {
       currentUnit = {
         name: String(r[1]).trim(),
         marking: String(r[2] ?? '').trim(),
