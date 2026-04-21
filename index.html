@@ -791,12 +791,13 @@
           <thead>
             <tr style="background:var(--bg);font-weight:600;font-size:10px;text-transform:uppercase;">
               <td style="padding:6px 4px;width:24px">#</td>
-              <td style="padding:6px 4px">Название</td>
-              <td style="padding:6px 4px;width:75px">A1 (мм)</td>
-              <td style="padding:6px 4px;width:75px">B1 (мм)</td>
-              <td style="padding:6px 4px;width:55px">Кол-во</td>
-              <td style="padding:6px 4px;width:90px">Развёртка</td>
-              <td style="padding:6px 4px;width:50px">Кт</td>
+              <td style="padding:6px 4px">Название / Тип</td>
+              <td style="padding:6px 4px;width:70px">Развёртка (мм)</td>
+              <td style="padding:6px 4px;width:40px">Кол-во</td>
+              <td style="padding:6px 4px">Материал / Толщ / Покрытие</td>
+              <td style="padding:6px 4px;width:55px">Вес (кг)</td>
+              <td style="padding:6px 4px;width:70px">Крепление</td>
+              <td style="padding:6px 4px;width:30px"></td>
               <td style="padding:6px 4px;width:30px"></td>
             </tr>
           </thead>
@@ -5404,21 +5405,49 @@ function fillCassetteTableFromSpec() {
   if (!tbody) return;
   tbody.innerHTML = '';
   let count = 0;
-  specData.units.forEach(u => {
-    const cassettes = u.children.filter(c => c.type === 'cassette');
-    if (cassettes.length === 0 && u.visH[0] > 0 && u.visW[0] > 0) {
+  specData.units.forEach((u, ui) => {
+    // Продажная единица — заголовок
+    const headerTr = document.createElement('tr');
+    headerTr.innerHTML = `<td colspan="8" style="padding:6px 4px;font-weight:700;background:#e8f0fe;color:var(--blue);font-size:11px;">📦 ${u.name || u.marking} | Кол-во: ${u.qty} | Проекция: ${u.projH}×${u.projW}</td>`;
+    tbody.appendChild(headerTr);
+
+    // Показываем ВСЕ дочерние детали
+    u.children.forEach(ch => {
       count++;
-      addSpecRow(count, u.name, u.visH[0], u.visW[0], u.qty || 1);
-      return;
-    }
-    cassettes.forEach(c => {
-      count++;
-      addSpecRow(count, c.name || u.name, c.devH > 0 ? c.devH : u.visH[0], c.devW > 0 ? c.devW : u.visW[0], c.qty || u.qty || 1);
+      const tr = document.createElement('tr');
+      const typeLabel = ch.type === 'cassette' ? '🔲 Кассета' :
+                        ch.type === 'tube' ? '🔩 Труба' :
+                        ch.type === 'rib_h' ? '↕️ Ус.верт' :
+                        ch.type === 'rib_w' ? '↔️ Ус.прод' :
+                        ch.type === 'rib_cross' ? '✕ Ус.попер' :
+                        ch.type === 'rib_ort' ? '📐 Ус.орт' : ch.type;
+      const matInfo = `${ch.materialMark || ''} ${ch.thick ? ch.thick+'мм' : ''} ${ch.coating || ''} ${ch.partType === 'Труба' ? ch.section : ''}`.trim();
+      const weight = ch.weight ? (ch.weight * (ch.qty || 1)).toFixed(2) : '—';
+      tr.innerHTML = `<td style="padding:3px;color:#888;text-align:center;font-size:10px;">${count}</td>
+        <td style="padding:3px;font-size:11px;">${typeLabel} ${ch.name || ch.marking || ''}</td>
+        <td style="padding:3px;font-size:11px;">${ch.devH || 0}×${ch.devW || 0}</td>
+        <td style="padding:3px;font-size:11px;">${ch.qty || 0}</td>
+        <td style="padding:3px;font-size:10px;color:var(--text-light);">${matInfo}</td>
+        <td style="padding:3px;text-align:center;font-size:11px;color:var(--orange);">${weight}</td>
+        <td style="padding:3px;text-align:center;font-size:10px;color:var(--text-light);">${ch.fastening || ''}</td>
+        <td style="padding:3px;text-align:center;">—</td>`;
+      tbody.appendChild(tr);
     });
+
+    // Если нет детей — пустая строка
+    if (u.children.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="8" style="padding:4px;color:#aaa;font-size:10px;">(нет дочерних деталей)</td>`;
+      tbody.appendChild(tr);
+    }
   });
-  if (count === 0 && typeof ctAddRow === 'function') ctAddRow();
-  if (typeof calcTypeSpec === 'function') calcTypeSpec();
+  if (count === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="8" style="padding:8px;color:#aaa;text-align:center;">Спецификация пуста</td>`;
+    tbody.appendChild(tr);
+  }
 }
+
 
 function addSpecRow(n, name, h, w, qty) {
   const tbody = document.getElementById('ct-spec-body');
