@@ -5514,7 +5514,7 @@ function updateSpecCostUnits() {
 
 function parseRubToNum(s) {
   if (!s || s === '—') return 0;
-  return parseFloat(String(s).replace(/[^0-9.,]/g '').replace(/,/g, '.')) || 0;
+  return parseFloat(String(s).replace(/[^0-9.,]/g, '').replace(/,/g, '.')) || 0;
 }
 
 function downloadSpecTemplate() {
